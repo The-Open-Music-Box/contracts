@@ -1,0 +1,86 @@
+name: Generate Contracts
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'schemas/**'
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install OpenAPI Generator
+        run: |
+          npm install -g @openapitools/openapi-generator-cli
+          npm install -g openapi-typescript
+
+      - name: Install Python dependencies
+        run: |
+          pip install datamodel-code-generator
+
+      - name: Generate all contracts
+        run: |
+          bash scripts/generate-all.sh
+
+      - name: Get version from commit
+        id: version
+        run: |
+          # Use commit short SHA as version suffix
+          VERSION="3.0.0-$(git rev-parse --short HEAD)"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Copy to releases directory
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p releases/$VERSION
+          cp -r generated/* releases/$VERSION/
+
+          # Create version info file
+          cat > releases/$VERSION/VERSION.txt << EOF
+          Version: $VERSION
+          Generated: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          Commit: ${{ github.sha }}
+          Schema Source: schemas/openapi.yaml
+          EOF
+
+      - name: Commit generated code
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          VERSION="${{ steps.version.outputs.version }}"
+
+          git add releases/$VERSION/
+          git commit -m "Generate contracts v$VERSION [skip ci]" || echo "No changes to commit"
+
+          # Create tag if on main branch
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            git tag -a "v$VERSION" -m "Release v$VERSION"
+          fi
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          tags: true

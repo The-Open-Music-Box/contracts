@@ -1,0 +1,42 @@
+{
+  "name": "@tomb/contracts",
+  "version": "3.0.0",
+  "description": "TheOpenMusicBox API contracts for multi-language client generation",
+  "main": "generated/typescript/index.ts",
+  "types": "generated/typescript/index.ts",
+  "scripts": {
+    "generate": "bash scripts/generate-all.sh",
+    "generate:dart": "bash scripts/generators/generate-dart.sh",
+    "generate:cpp": "bash scripts/generators/generate-cpp.sh",
+    "generate:typescript": "bash scripts/generators/generate-typescript.sh",
+    "generate:python": "bash scripts/generators/generate-python.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theopenmusicbox/tomb-contracts.git"
+  },
+  "keywords": [
+    "tomb",
+    "openmusicbox",
+    "api",
+    "contracts",
+    "openapi",
+    "typescript",
+    "dart",
+    "flutter",
+    "cpp",
+    "python"
+  ],
+  "author": "TheOpenMusicBox",
+  "license": "MIT",
+  "files": [
+    "schemas/",
+    "releases/",
+    "scripts/",
+    "README.md"
+  ],
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.7.0",
+    "openapi-typescript": "^6.7.0"
+  }
+}

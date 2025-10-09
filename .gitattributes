@@ -1,0 +1,10 @@
+# Generated files
+generated/** linguist-generated=true
+releases/** linguist-generated=true
+
+# Documentation
+*.md linguist-documentation
+docs/** linguist-documentation
+
+# Schema files are the source of truth
+schemas/** linguist-language=YAML

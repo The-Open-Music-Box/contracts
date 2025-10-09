@@ -1,0 +1,46 @@
+# Generated code (auto-generated, not committed)
+generated/
+
+# Node modules
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Dart/Flutter
+.dart_tool/
+.packages
+pubspec.lock
+build/
+
+# C++
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+
+# Logs
+*.log
+
+# OS
+Thumbs.db

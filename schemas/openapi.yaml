@@ -1,0 +1,960 @@
+openapi: 3.0.3
+info:
+  title: TheOpenMusicBox API
+  description: |
+    Complete API contract definitions for TheOpenMusicBox - A Raspberry Pi-based music player system.
+
+    All API responses follow the UnifiedResponseService format with standardized envelopes.
+    This specification is the source of truth for all client implementations (Web, Flutter, C++).
+  version: 3.0.0
+  contact:
+    name: TheOpenMusicBox
+    url: https://github.com/theopenmusicbox/tomb-rpi
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: http://{host}:8000
+    description: Custom deployment
+    variables:
+      host:
+        default: localhost
+        description: Raspberry Pi hostname or IP address
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Player
+    description: Audio player control endpoints
+  - name: Playlists
+    description: Playlist management endpoints
+  - name: NFC
+    description: NFC tag association endpoints
+  - name: System
+    description: System information and control
+  - name: YouTube
+    description: YouTube download functionality
+  - name: Uploads
+    description: File upload management
+
+components:
+  schemas:
+    UnifiedResponse:
+      type: object
+      description: Standardized response wrapper used by all API endpoints
+      required:
+        - status
+        - message
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+        message:
+          type: string
+        data:
+          oneOf:
+            - type: object
+            - type: array
+            - type: "null"
+        client_op_id:
+          type: string
+          nullable: true
+          description: Client operation ID for operation tracking
+        server_seq:
+          type: number
+          nullable: true
+          description: Server sequence number for state synchronization
+        timestamp:
+          type: number
+          description: Unix timestamp in seconds
+        request_id:
+          type: string
+          nullable: true
+        error_type:
+          type: string
+          nullable: true
+          enum:
+            - validation_error
+            - not_found
+            - rate_limit_exceeded
+            - service_unavailable
+            - internal_error
+            - conflict
+            - bad_request
+        details:
+          type: object
+          nullable: true
+          additionalProperties: true
+
+    Track:
+      type: object
+      required:
+        - number
+        - title
+        - filename
+      properties:
+        number:
+          type: integer
+          description: Track number in playlist
+        title:
+          type: string
+        filename:
+          type: string
+        file_path:
+          type: string
+        duration:
+          type: integer
+          nullable: true
+          description: Duration in seconds
+        duration_ms:
+          type: integer
+          nullable: true
+          description: Duration in milliseconds
+        artist:
+          type: string
+          nullable: true
+        album:
+          type: string
+          nullable: true
+        file_size:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PlaylistSummary:
+      type: object
+      required:
+        - id
+        - title
+        - track_count
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        track_count:
+          type: integer
+        nfc_tag_id:
+          type: string
+          nullable: true
+        server_seq:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PlaylistDetailed:
+      type: object
+      required:
+        - id
+        - title
+        - tracks
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Track'
+        nfc_tag_id:
+          type: string
+          nullable: true
+        server_seq:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        total_duration_ms:
+          type: integer
+
+    PlayerState:
+      type: object
+      required:
+        - is_playing
+        - position_ms
+        - can_prev
+        - can_next
+        - server_seq
+      properties:
+        is_playing:
+          type: boolean
+        active_playlist_id:
+          type: string
+          nullable: true
+        active_playlist_title:
+          type: string
+          nullable: true
+        active_track_id:
+          type: string
+          nullable: true
+        active_track:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Track'
+        track_index:
+          type: integer
+          nullable: true
+          description: 0-based track index in playlist
+        track_count:
+          type: integer
+          nullable: true
+          description: Total number of tracks in playlist
+        position_ms:
+          type: integer
+          description: Current playback position in milliseconds
+        duration_ms:
+          type: integer
+          nullable: true
+          description: Track duration in milliseconds
+        can_prev:
+          type: boolean
+        can_next:
+          type: boolean
+        volume:
+          type: integer
+          nullable: true
+          minimum: 0
+          maximum: 100
+        server_seq:
+          type: number
+
+    NFCAssociation:
+      type: object
+      required:
+        - tag_id
+        - playlist_id
+        - playlist_title
+        - created_at
+      properties:
+        tag_id:
+          type: string
+        playlist_id:
+          type: string
+        playlist_title:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    SystemInfo:
+      type: object
+      required:
+        - platform
+        - platform_release
+        - platform_version
+        - architecture
+        - hostname
+        - processor
+      properties:
+        platform:
+          type: string
+        platform_release:
+          type: string
+        platform_version:
+          type: string
+        architecture:
+          type: string
+        hostname:
+          type: string
+        processor:
+          type: string
+        memory_total:
+          type: integer
+        memory_available:
+          type: integer
+        memory_percent:
+          type: number
+
+    HealthStatus:
+      type: object
+      required:
+        - status
+        - services
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        services:
+          type: object
+          required:
+            - api
+            - audio
+            - nfc
+            - gpio
+            - led_hat
+            - websocket
+          properties:
+            api:
+              type: boolean
+            audio:
+              type: boolean
+            nfc:
+              type: boolean
+            gpio:
+              type: boolean
+            led_hat:
+              type: boolean
+            websocket:
+              type: boolean
+        timestamp:
+          type: number
+
+paths:
+  /api/health:
+    get:
+      tags: [Health]
+      summary: Health check endpoint
+      operationId: getHealth
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/HealthStatus'
+
+  /api/player/play:
+    post:
+      tags: [Player]
+      summary: Start/resume playback
+      operationId: playerPlay
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Player state after play command
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PlayerState'
+
+  /api/player/pause:
+    post:
+      tags: [Player]
+      summary: Pause playback
+      operationId: playerPause
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Player state after pause command
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PlayerState'
+
+  /api/player/stop:
+    post:
+      tags: [Player]
+      summary: Stop playback
+      operationId: playerStop
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Player state after stop command
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PlayerState'
+
+  /api/player/next:
+    post:
+      tags: [Player]
+      summary: Skip to next track
+      operationId: playerNext
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Player state after next command
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PlayerState'
+
+  /api/player/previous:
+    post:
+      tags: [Player]
+      summary: Skip to previous track
+      operationId: playerPrevious
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Player state after previous command
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PlayerState'
+
+  /api/player/toggle:
+    post:
+      tags: [Player]
+      summary: Toggle play/pause
+      operationId: playerToggle
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Player state after toggle command
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PlayerState'
+
+  /api/player/status:
+    get:
+      tags: [Player]
+      summary: Get current player status
+      operationId: getPlayerStatus
+      responses:
+        '200':
+          description: Current player state
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PlayerState'
+
+  /api/player/seek:
+    post:
+      tags: [Player]
+      summary: Seek to position in current track
+      operationId: playerSeek
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - position_ms
+              properties:
+                position_ms:
+                  type: integer
+                  minimum: 0
+                  maximum: 86400000
+                  description: Position in milliseconds
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Player state after seek
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PlayerState'
+
+  /api/player/volume:
+    post:
+      tags: [Player]
+      summary: Set volume level
+      operationId: setVolume
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - volume
+              properties:
+                volume:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Volume confirmation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          volume:
+                            type: integer
+
+  /api/playlists:
+    get:
+      tags: [Playlists]
+      summary: List all playlists with pagination
+      operationId: listPlaylists
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Paginated list of playlists
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required:
+                          - playlists
+                          - page
+                          - limit
+                          - total
+                          - total_pages
+                        properties:
+                          playlists:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/PlaylistSummary'
+                          page:
+                            type: integer
+                          limit:
+                            type: integer
+                          total:
+                            type: integer
+                          total_pages:
+                            type: integer
+
+    post:
+      tags: [Playlists]
+      summary: Create new playlist
+      operationId: createPlaylist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                description:
+                  type: string
+                client_op_id:
+                  type: string
+      responses:
+        '201':
+          description: Created playlist
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PlaylistDetailed'
+
+  /api/playlists/{playlist_id}:
+    get:
+      tags: [Playlists]
+      summary: Get specific playlist
+      operationId: getPlaylist
+      parameters:
+        - name: playlist_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Playlist details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PlaylistDetailed'
+
+    put:
+      tags: [Playlists]
+      summary: Update playlist
+      operationId: updatePlaylist
+      parameters:
+        - name: playlist_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Update confirmation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          client_op_id:
+                            type: string
+
+    delete:
+      tags: [Playlists]
+      summary: Delete playlist
+      operationId: deletePlaylist
+      parameters:
+        - name: playlist_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_op_id:
+                  type: string
+      responses:
+        '204':
+          description: Playlist deleted successfully
+
+  /api/playlists/{playlist_id}/start:
+    post:
+      tags: [Playlists]
+      summary: Start playlist playback
+      operationId: startPlaylist
+      parameters:
+        - name: playlist_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Playlist started
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          playlist_id:
+                            type: string
+                          started:
+                            type: boolean
+
+  /api/nfc/associate:
+    post:
+      tags: [NFC]
+      summary: Associate NFC tag with playlist
+      operationId: associateNFC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - playlist_id
+                - tag_id
+              properties:
+                playlist_id:
+                  type: string
+                tag_id:
+                  type: string
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: NFC association created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          association:
+                            $ref: '#/components/schemas/NFCAssociation'
+
+  /api/nfc/associate/{tag_id}:
+    delete:
+      tags: [NFC]
+      summary: Remove NFC tag association
+      operationId: removeNFCAssociation
+      parameters:
+        - name: tag_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Association removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnifiedResponse'
+
+  /api/nfc/status:
+    get:
+      tags: [NFC]
+      summary: Get NFC reader status
+      operationId: getNFCStatus
+      responses:
+        '200':
+          description: NFC reader status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required:
+                          - reader_available
+                          - scanning
+                          - association_active
+                          - active_sessions
+                        properties:
+                          reader_available:
+                            type: boolean
+                          scanning:
+                            type: boolean
+                          association_active:
+                            type: boolean
+                          current_session_id:
+                            type: string
+                            nullable: true
+                          active_sessions:
+                            type: array
+
+  /api/system/info:
+    get:
+      tags: [System]
+      summary: Get system information
+      operationId: getSystemInfo
+      responses:
+        '200':
+          description: System information
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required:
+                          - system_info
+                          - version
+                          - hostname
+                          - uptime
+                        properties:
+                          system_info:
+                            $ref: '#/components/schemas/SystemInfo'
+                          version:
+                            type: string
+                          hostname:
+                            type: string
+                          uptime:
+                            type: number
+
+  /api/youtube/download:
+    post:
+      tags: [YouTube]
+      summary: Download audio from YouTube URL
+      operationId: downloadYouTube
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - playlist_id
+              properties:
+                url:
+                  type: string
+                  format: uri
+                playlist_id:
+                  type: string
+                quality:
+                  type: string
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Download task initiated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          task_id:
+                            type: string
+                          status:
+                            type: string
