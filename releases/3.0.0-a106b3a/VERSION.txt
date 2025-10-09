@@ -1,0 +1,4 @@
+Version: 3.0.0-a106b3a
+Generated: 2025-10-09 22:07:53 UTC
+Commit: a106b3af892539070426d96ca4f3c0cf95f48ae6
+Schema Source: schemas/openapi.yaml
