@@ -58,6 +58,7 @@ components:
           oneOf:
             - type: object
             - type: array
+              items: {}
             - type: "null"
         client_op_id:
           type: string
@@ -884,6 +885,8 @@ paths:
                             nullable: true
                           active_sessions:
                             type: array
+                            items:
+                              type: string
 
   /api/system/info:
     get:
