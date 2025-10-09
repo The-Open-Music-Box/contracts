@@ -23,11 +23,7 @@ openapi-generator-cli generate \
     -i "$SCHEMA_FILE" \
     -g cpp-restsdk \
     -o "$OUTPUT_DIR" \
-    --additional-properties=\
-packageName=TombContracts,\
-packageVersion=3.0.0,\
-declspec=TOMB_API,\
-defaultHeaders=true
+    --additional-properties=packageName=TombContracts,packageVersion=3.0.0,declspec=TOMB_API,defaultHeaders=true
 
 echo "✅ C++ client generated successfully at: $OUTPUT_DIR"
 echo ""

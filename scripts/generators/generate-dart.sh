@@ -23,15 +23,7 @@ openapi-generator-cli generate \
     -i "$SCHEMA_FILE" \
     -g dart-dio \
     -o "$OUTPUT_DIR" \
-    --additional-properties=\
-pubName=tomb_contracts,\
-pubVersion=3.0.0,\
-pubDescription="TheOpenMusicBox API Client for Dart/Flutter",\
-pubAuthor="TheOpenMusicBox",\
-pubHomepage="https://github.com/theopenmusicbox/tomb-contracts",\
-dateLibrary=core,\
-nullSafe=true,\
-useEnumExtension=true
+    --additional-properties=pubName=tomb_contracts,pubVersion=3.0.0,pubDescription=TheOpenMusicBox_API_Client_for_Dart_Flutter,pubAuthor=TheOpenMusicBox,pubHomepage=https://github.com/theopenmusicbox/tomb-contracts,dateLibrary=core,nullSafe=true,useEnumExtension=true
 
 echo "✅ Dart client generated successfully at: $OUTPUT_DIR"
 echo ""
