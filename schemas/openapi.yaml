@@ -319,6 +319,152 @@ components:
         timestamp:
           type: number
 
+    UploadSession:
+      type: object
+      required:
+        - session_id
+        - playlist_id
+        - filename
+        - file_size
+        - chunk_size
+        - total_chunks
+      properties:
+        session_id:
+          type: string
+        playlist_id:
+          type: string
+        filename:
+          type: string
+        file_size:
+          type: integer
+          description: Total file size in bytes
+        chunk_size:
+          type: integer
+          description: Size of each chunk in bytes
+        total_chunks:
+          type: integer
+          description: Total number of chunks
+        file_hash:
+          type: string
+          nullable: true
+          description: Optional file hash for verification
+        created_at:
+          type: string
+          format: date-time
+
+    UploadSessionStatus:
+      type: object
+      required:
+        - session_id
+        - filename
+        - file_size
+        - chunks_uploaded
+        - chunks_total
+        - progress_percent
+        - status
+      properties:
+        session_id:
+          type: string
+        filename:
+          type: string
+        file_size:
+          type: integer
+        chunks_uploaded:
+          type: integer
+        chunks_total:
+          type: integer
+        progress_percent:
+          type: number
+          minimum: 0
+          maximum: 100
+        playlist_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [pending, uploading, completed, error]
+
+    ChunkUploadResult:
+      type: object
+      required:
+        - chunk_index
+        - received
+        - total_chunks
+      properties:
+        chunk_index:
+          type: integer
+        received:
+          type: boolean
+        total_chunks:
+          type: integer
+        progress_percent:
+          type: number
+
+    UploadFinalizeResult:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+        message:
+          type: string
+        track:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Track'
+
+    YouTubeSearchResult:
+      type: object
+      required:
+        - video_id
+        - title
+        - duration
+      properties:
+        video_id:
+          type: string
+        title:
+          type: string
+        duration:
+          type: integer
+          description: Duration in seconds
+        thumbnail:
+          type: string
+          nullable: true
+        channel:
+          type: string
+          nullable: true
+
+    YouTubeDownloadStatus:
+      type: object
+      required:
+        - task_id
+        - status
+      properties:
+        task_id:
+          type: string
+        status:
+          type: string
+          enum: [pending, downloading, processing, completed, failed]
+        progress:
+          type: number
+          minimum: 0
+          maximum: 100
+          nullable: true
+        error:
+          type: string
+          nullable: true
+        track:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Track'
+
 paths:
   /api/health:
     get:
@@ -787,6 +933,402 @@ paths:
                           started:
                             type: boolean
 
+  /api/playlists/{playlist_id}/reorder:
+    post:
+      tags: [Playlists]
+      summary: Reorder tracks in playlist
+      operationId: reorderPlaylist
+      parameters:
+        - name: playlist_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - track_ids
+              properties:
+                track_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: Ordered list of track IDs
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Playlist reordered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnifiedResponse'
+
+  /api/playlists/{playlist_id}/tracks:
+    delete:
+      tags: [Playlists]
+      summary: Remove tracks from playlist
+      operationId: removeTracksFromPlaylist
+      parameters:
+        - name: playlist_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - track_ids
+              properties:
+                track_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: List of track IDs to remove
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Tracks removed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnifiedResponse'
+
+  /api/playlists/move-track:
+    post:
+      tags: [Playlists]
+      summary: Move track between playlists
+      operationId: moveTrack
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - source_playlist_id
+                - target_playlist_id
+                - track_id
+              properties:
+                source_playlist_id:
+                  type: string
+                target_playlist_id:
+                  type: string
+                track_id:
+                  type: string
+                target_position:
+                  type: integer
+                  nullable: true
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Track moved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnifiedResponse'
+
+  /api/playlists/sync:
+    post:
+      tags: [Playlists]
+      summary: Sync playlist state
+      operationId: syncPlaylists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                last_sync_seq:
+                  type: number
+                  description: Last known server sequence number
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Playlist state synchronized
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          playlists:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/PlaylistDetailed'
+                          server_seq:
+                            type: number
+
+  /api/playlists/{playlist_id}/uploads/session:
+    post:
+      tags: [Uploads, Playlists]
+      summary: Initialize chunked upload session
+      operationId: initUploadSession
+      parameters:
+        - name: playlist_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - filename
+                - file_size
+              properties:
+                filename:
+                  type: string
+                file_size:
+                  type: integer
+                  description: Total file size in bytes
+                chunk_size:
+                  type: integer
+                  default: 1048576
+                  description: Chunk size in bytes (default 1MB)
+                file_hash:
+                  type: string
+                  nullable: true
+      responses:
+        '201':
+          description: Upload session initialized
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UploadSession'
+
+  /api/playlists/{playlist_id}/uploads/{session_id}/chunks/{chunk_index}:
+    put:
+      tags: [Uploads, Playlists]
+      summary: Upload a file chunk
+      operationId: uploadChunk
+      parameters:
+        - name: playlist_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chunk_index
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Chunk uploaded successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ChunkUploadResult'
+
+  /api/playlists/{playlist_id}/uploads/{session_id}/finalize:
+    post:
+      tags: [Uploads, Playlists]
+      summary: Finalize upload and add track to playlist
+      operationId: finalizeUpload
+      parameters:
+        - name: playlist_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_hash:
+                  type: string
+                  nullable: true
+                metadata_override:
+                  type: object
+                  nullable: true
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Upload finalized and track added
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UploadFinalizeResult'
+
+  /api/playlists/{playlist_id}/uploads/{session_id}:
+    get:
+      tags: [Uploads, Playlists]
+      summary: Get upload session status
+      operationId: getUploadStatus
+      parameters:
+        - name: playlist_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Upload session status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UploadSessionStatus'
+
+  /api/uploads/sessions:
+    get:
+      tags: [Uploads]
+      summary: List all upload sessions
+      operationId: listUploadSessions
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, uploading, completed, error]
+          description: Filter by upload status
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Maximum sessions to return
+      responses:
+        '200':
+          description: List of upload sessions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          sessions:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/UploadSessionStatus'
+
+  /api/uploads/sessions/{session_id}:
+    delete:
+      tags: [Uploads]
+      summary: Delete upload session
+      operationId: deleteUploadSession
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Upload session deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnifiedResponse'
+
+  /api/uploads/cleanup:
+    post:
+      tags: [Uploads]
+      summary: Cleanup stale upload sessions
+      operationId: cleanupStaleSessions
+      parameters:
+        - name: max_age_hours
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 168
+            default: 24
+          description: Maximum age in hours for cleanup
+      responses:
+        '200':
+          description: Stale sessions cleaned up
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          cleaned_sessions:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                session_id:
+                                  type: string
+                                filename:
+                                  type: string
+                                age_hours:
+                                  type: number
+
   /api/nfc/associate:
     post:
       tags: [NFC]
@@ -888,6 +1430,41 @@ paths:
                             items:
                               type: string
 
+  /api/nfc/scan:
+    post:
+      tags: [NFC]
+      summary: Initiate NFC tag scan
+      operationId: scanNFC
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                timeout:
+                  type: integer
+                  description: Scan timeout in seconds
+                  default: 30
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: NFC scan initiated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          scanning:
+                            type: boolean
+                          session_id:
+                            type: string
+
   /api/system/info:
     get:
       tags: [System]
@@ -919,6 +1496,74 @@ paths:
                             type: string
                           uptime:
                             type: number
+
+  /api/system/logs:
+    get:
+      tags: [System]
+      summary: Get system logs
+      operationId: getSystemLogs
+      parameters:
+        - name: lines
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+          description: Number of log lines to return
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [debug, info, warning, error]
+          description: Filter by log level
+      responses:
+        '200':
+          description: System logs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          logs:
+                            type: array
+                            items:
+                              type: string
+
+  /api/system/restart:
+    post:
+      tags: [System]
+      summary: Restart the system
+      operationId: restartSystem
+      x-skip-in-validation: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_op_id:
+                  type: string
+      responses:
+        '200':
+          description: Restart initiated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          restarting:
+                            type: boolean
 
   /api/youtube/download:
     post:
@@ -961,3 +1606,65 @@ paths:
                             type: string
                           status:
                             type: string
+
+  /api/youtube/search:
+    get:
+      tags: [YouTube]
+      summary: Search YouTube videos
+      operationId: searchYouTube
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query
+        - name: max_results
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+          description: Maximum number of results
+      responses:
+        '200':
+          description: YouTube search results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          results:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/YouTubeSearchResult'
+
+  /api/youtube/status/{task_id}:
+    get:
+      tags: [YouTube]
+      summary: Get YouTube download task status
+      operationId: getYouTubeDownloadStatus
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Download task status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/YouTubeDownloadStatus'
