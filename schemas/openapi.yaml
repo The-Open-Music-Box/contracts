@@ -6,7 +6,7 @@ info:
 
     All API responses follow the UnifiedResponseService format with standardized envelopes.
     This specification is the source of truth for all client implementations (Web, Flutter, C++).
-  version: 3.0.0
+  version: 3.1.0
   contact:
     name: TheOpenMusicBox
     url: https://github.com/theopenmusicbox/tomb-rpi
@@ -109,11 +109,14 @@ components:
         duration:
           type: integer
           nullable: true
-          description: Duration in seconds
+          deprecated: true
+          description: |
+            DEPRECATED: Use duration_ms instead for millisecond precision.
+            Duration in seconds. Will be removed in v4.0.0.
         duration_ms:
           type: integer
           nullable: true
-          description: Duration in milliseconds
+          description: Duration in milliseconds (preferred over duration)
         artist:
           type: string
           nullable: true
@@ -210,6 +213,14 @@ components:
           nullable: true
           allOf:
             - $ref: '#/components/schemas/Track'
+        active_track_number:
+          type: integer
+          nullable: true
+          description: Track number in playlist (lightweight alternative to full active_track)
+        active_track_title:
+          type: string
+          nullable: true
+          description: Track title (lightweight alternative to full active_track)
         track_index:
           type: integer
           nullable: true
@@ -264,6 +275,7 @@ components:
         - architecture
         - hostname
         - processor
+        - server_seq
       properties:
         platform:
           type: string
@@ -283,6 +295,9 @@ components:
           type: integer
         memory_percent:
           type: number
+        server_seq:
+          type: number
+          description: Server sequence number for state synchronization
 
     HealthStatus:
       type: object
@@ -290,6 +305,7 @@ components:
         - status
         - services
         - timestamp
+        - server_seq
       properties:
         status:
           type: string
@@ -318,6 +334,9 @@ components:
               type: boolean
         timestamp:
           type: number
+        server_seq:
+          type: number
+          description: Server sequence number for state synchronization
 
     UploadSession:
       type: object
