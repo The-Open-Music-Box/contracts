@@ -93,10 +93,14 @@ components:
     Track:
       type: object
       required:
+        - id
         - number
         - title
         - filename
       properties:
+        id:
+          type: string
+          description: "Unique track identifier in format: {playlist_id}_{track_number}"
         number:
           type: integer
           description: Track number in playlist
