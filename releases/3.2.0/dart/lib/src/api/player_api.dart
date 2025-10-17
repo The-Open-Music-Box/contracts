@@ -11,7 +11,6 @@ import 'package:dio/dio.dart';
 import 'package:tomb_contracts/src/model/player_play200_response.dart';
 import 'package:tomb_contracts/src/model/player_play_request.dart';
 import 'package:tomb_contracts/src/model/player_seek_request.dart';
-import 'package:tomb_contracts/src/model/set_volume200_response.dart';
 import 'package:tomb_contracts/src/model/set_volume_request.dart';
 
 class PlayerApi {
@@ -772,9 +771,9 @@ class PlayerApi {
   /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
   /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
   ///
-  /// Returns a [Future] containing a [Response] with a [SetVolume200Response] as data
+  /// Returns a [Future] containing a [Response] with a [PlayerPlay200Response] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<SetVolume200Response>> setVolume({ 
+  Future<Response<PlayerPlay200Response>> setVolume({ 
     required SetVolumeRequest setVolumeRequest,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -824,14 +823,14 @@ class PlayerApi {
       onReceiveProgress: onReceiveProgress,
     );
 
-    SetVolume200Response? _responseData;
+    PlayerPlay200Response? _responseData;
 
     try {
       final rawResponse = _response.data;
       _responseData = rawResponse == null ? null : _serializers.deserialize(
         rawResponse,
-        specifiedType: const FullType(SetVolume200Response),
-      ) as SetVolume200Response;
+        specifiedType: const FullType(PlayerPlay200Response),
+      ) as PlayerPlay200Response;
 
     } catch (error, stackTrace) {
       throw DioException(
@@ -843,7 +842,7 @@ class PlayerApi {
       );
     }
 
-    return Response<SetVolume200Response>(
+    return Response<PlayerPlay200Response>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

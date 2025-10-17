@@ -66,8 +66,6 @@ export 'package:tomb_contracts/src/model/scan_nfc200_response_all_of_data.dart';
 export 'package:tomb_contracts/src/model/scan_nfc_request.dart';
 export 'package:tomb_contracts/src/model/search_you_tube200_response.dart';
 export 'package:tomb_contracts/src/model/search_you_tube200_response_all_of_data.dart';
-export 'package:tomb_contracts/src/model/set_volume200_response.dart';
-export 'package:tomb_contracts/src/model/set_volume200_response_all_of_data.dart';
 export 'package:tomb_contracts/src/model/set_volume_request.dart';
 export 'package:tomb_contracts/src/model/start_playlist200_response.dart';
 export 'package:tomb_contracts/src/model/start_playlist200_response_all_of_data.dart';

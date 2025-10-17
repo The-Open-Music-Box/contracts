@@ -5,6 +5,23 @@ All notable changes to TheOpenMusicBox API contracts will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2025-01-17
+
+### Changed
+- **BREAKING (Minor)**: `/api/player/volume` endpoint now returns full `PlayerState` schema instead of just `{volume: int}`
+  - This ensures consistency with all other player control endpoints (`/play`, `/pause`, `/seek`, etc.)
+  - Backward compatible: clients that only check the `volume` field will still work, but they now receive the full player state
+  - **Flutter App Fix**: Resolves "No player data in response" error when calling POST `/api/player/volume`
+  - **RPI Implementation**: Fixed to return `PlayerState` instead of merged object
+  - **ESP32 Implementation**: Updated `handleVolumeSet()` to return player status via `handleGetStatus()`
+
+### Developer Impact
+- **RPI Firmware**: Update `/api/player/volume` endpoint to return status instead of `{"volume": volume, **status}`
+- **ESP32 Firmware**: `handleVolumeSet()` now calls `handleGetStatus()` to return PlayerState
+- **Flutter App**: No changes needed - already expects PlayerState
+
+---
+
 ## [3.0.0] - 2025-01-09
 
 ### Added

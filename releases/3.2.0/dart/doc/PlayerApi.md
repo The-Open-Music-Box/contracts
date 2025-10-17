@@ -345,7 +345,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **setVolume**
-> SetVolume200Response setVolume(setVolumeRequest)
+> PlayerPlay200Response setVolume(setVolumeRequest)
 
 Set volume level
 
@@ -372,7 +372,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**SetVolume200Response**](SetVolume200Response.md)
+[**PlayerPlay200Response**](PlayerPlay200Response.md)
 
 ### Authorization
 

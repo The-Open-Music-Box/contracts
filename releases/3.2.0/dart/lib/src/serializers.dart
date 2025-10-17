@@ -62,8 +62,6 @@ import 'package:tomb_contracts/src/model/scan_nfc200_response_all_of_data.dart';
 import 'package:tomb_contracts/src/model/scan_nfc_request.dart';
 import 'package:tomb_contracts/src/model/search_you_tube200_response.dart';
 import 'package:tomb_contracts/src/model/search_you_tube200_response_all_of_data.dart';
-import 'package:tomb_contracts/src/model/set_volume200_response.dart';
-import 'package:tomb_contracts/src/model/set_volume200_response_all_of_data.dart';
 import 'package:tomb_contracts/src/model/set_volume_request.dart';
 import 'package:tomb_contracts/src/model/start_playlist200_response.dart';
 import 'package:tomb_contracts/src/model/start_playlist200_response_all_of_data.dart';
@@ -134,8 +132,6 @@ part 'serializers.g.dart';
   ScanNFCRequest,
   SearchYouTube200Response,
   SearchYouTube200ResponseAllOfData,
-  SetVolume200Response,
-  SetVolume200ResponseAllOfData,
   SetVolumeRequest,
   StartPlaylist200Response,
   StartPlaylist200ResponseAllOfData,

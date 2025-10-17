@@ -54,8 +54,6 @@ doc/ScanNFC200ResponseAllOfData.md
 doc/ScanNFCRequest.md
 doc/SearchYouTube200Response.md
 doc/SearchYouTube200ResponseAllOfData.md
-doc/SetVolume200Response.md
-doc/SetVolume200ResponseAllOfData.md
 doc/SetVolumeRequest.md
 doc/StartPlaylist200Response.md
 doc/StartPlaylist200ResponseAllOfData.md
@@ -141,8 +139,6 @@ lib/src/model/scan_nfc200_response_all_of_data.dart
 lib/src/model/scan_nfc_request.dart
 lib/src/model/search_you_tube200_response.dart
 lib/src/model/search_you_tube200_response_all_of_data.dart
-lib/src/model/set_volume200_response.dart
-lib/src/model/set_volume200_response_all_of_data.dart
 lib/src/model/set_volume_request.dart
 lib/src/model/start_playlist200_response.dart
 lib/src/model/start_playlist200_response_all_of_data.dart
@@ -216,8 +212,6 @@ test/scan_nfc200_response_test.dart
 test/scan_nfc_request_test.dart
 test/search_you_tube200_response_all_of_data_test.dart
 test/search_you_tube200_response_test.dart
-test/set_volume200_response_all_of_data_test.dart
-test/set_volume200_response_test.dart
 test/set_volume_request_test.dart
 test/start_playlist200_response_all_of_data_test.dart
 test/start_playlist200_response_test.dart

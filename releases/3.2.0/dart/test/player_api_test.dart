@@ -65,7 +65,7 @@ void main() {
 
     // Set volume level
     //
-    //Future<SetVolume200Response> setVolume(SetVolumeRequest setVolumeRequest) async
+    //Future<PlayerPlay200Response> setVolume(SetVolumeRequest setVolumeRequest) async
     test('test setVolume', () async {
       // TODO
     });
