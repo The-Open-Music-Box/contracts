@@ -1122,8 +1122,9 @@ paths:
                   description: Total file size in bytes
                 chunk_size:
                   type: integer
-                  default: 1048576
-                  description: Chunk size in bytes (default 1MB)
+                  default: 32768
+                  maximum: 32768
+                  description: Chunk size in bytes (ESP32 supports max 32KB)
                 file_hash:
                   type: string
                   nullable: true
