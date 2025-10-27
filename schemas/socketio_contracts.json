@@ -519,24 +519,60 @@
             "properties": {
               "state": {
                 "type": "string",
-                "enum": ["activated", "waiting", "success", "duplicate", "timeout", "cancelled", "error"]
+                "enum": ["activated", "waiting", "success", "duplicate", "timeout", "cancelled", "error", "webhook_triggered"]
+              },
+              "association_type": {
+                "type": ["string", "null"],
+                "enum": ["playlist", "webhook", null]
               },
               "playlist_id": {"type": ["string", "null"]},
               "tag_id": {"type": ["string", "null"]},
-              "message": {"type": ["string", "null"]},
-              "expires_at": {"type": ["number", "null"]},
-              "existing_playlist": {
+              "webhook_url": {"type": ["string", "null"]},
+              "webhook_response": {
                 "type": ["object", "null"],
                 "properties": {
-                  "id": {"type": "string"},
-                  "title": {"type": "string"}
+                  "status_code": {"type": "integer"},
+                  "success": {"type": "boolean"},
+                  "error": {"type": ["string", "null"]}
+                }
+              },
+              "message": {"type": ["string", "null"]},
+              "expires_at": {"type": ["number", "null"]},
+              "existing_association": {
+                "type": ["object", "null"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["playlist", "webhook"]
+                  },
+                  "playlist_id": {"type": ["string", "null"]},
+                  "playlist_title": {"type": ["string", "null"]},
+                  "webhook_url": {"type": ["string", "null"]}
                 }
               },
               "server_seq": {"type": "number"}
             },
             "required": ["state", "server_seq"]
           },
-          "description": "NFC association state changes"
+          "description": "NFC association state changes (playlist OR webhook)"
+        },
+        "webhook_trigger_result": {
+          "direction": "server_to_client",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "tag_id": {"type": "string"},
+              "webhook_url": {"type": "string"},
+              "success": {"type": "boolean"},
+              "status_code": {"type": ["integer", "null"]},
+              "response_time_ms": {"type": "integer"},
+              "error": {"type": ["string", "null"]},
+              "timestamp": {"type": "string", "format": "date-time"},
+              "server_seq": {"type": "number"}
+            },
+            "required": ["tag_id", "success", "response_time_ms", "timestamp", "server_seq"]
+          },
+          "description": "Webhook trigger result after NFC tag scan"
         },
         "start_nfc_link": {
           "direction": "client_to_server",
