@@ -6,7 +6,7 @@ info:
 
     All API responses follow the UnifiedResponseService format with standardized envelopes.
     This specification is the source of truth for all client implementations (Web, Flutter, C++).
-  version: 3.2.0
+  version: 2.0.0
   contact:
     name: TheOpenMusicBox
     url: https://github.com/theopenmusicbox/tomb-rpi
@@ -252,23 +252,100 @@ components:
         server_seq:
           type: number
 
-    NFCAssociation:
+    # NFCAssociation - Base schema with discriminator for playlist OR webhook
+    NFCAssociationBase:
       type: object
       required:
         - tag_id
-        - playlist_id
-        - playlist_title
+        - association_type
         - created_at
       properties:
         tag_id:
           type: string
-        playlist_id:
+          description: "NFC tag unique identifier (UID as hex string)"
+          example: "04:A3:2C:1A:5D:6E:80"
+        association_type:
           type: string
-        playlist_title:
-          type: string
+          enum: [playlist, webhook]
+          description: "Type of association"
         created_at:
           type: string
           format: date-time
+          description: "ISO 8601 timestamp of association creation"
+      discriminator:
+        propertyName: association_type
+        mapping:
+          playlist: '#/components/schemas/NFCPlaylistAssociation'
+          webhook: '#/components/schemas/NFCWebhookAssociation'
+
+    NFCPlaylistAssociation:
+      allOf:
+        - $ref: '#/components/schemas/NFCAssociationBase'
+        - type: object
+          required:
+            - playlist_id
+            - playlist_title
+          properties:
+            playlist_id:
+              type: string
+              description: "Associated playlist unique identifier"
+            playlist_title:
+              type: string
+              description: "Playlist title (cached for display)"
+
+    NFCWebhookAssociation:
+      allOf:
+        - $ref: '#/components/schemas/NFCAssociationBase'
+        - type: object
+          required:
+            - webhook_url
+          properties:
+            webhook_url:
+              type: string
+              format: uri
+              description: "HTTP(S) URL to trigger"
+              example: "https://api.example.com/webhook"
+            webhook_method:
+              type: string
+              enum: [GET, POST, PUT]
+              default: POST
+              description: "HTTP method to use"
+            webhook_headers:
+              type: object
+              additionalProperties:
+                type: string
+              description: "Custom HTTP headers"
+              example:
+                Authorization: "Bearer token123"
+                X-Device-ID: "{{device_id}}"
+            webhook_body:
+              type: string
+              description: "Request body template (supports variable substitution)"
+              example: '{"tag_id": "{{tag_id}}", "timestamp": "{{timestamp}}"}'
+            webhook_timeout_ms:
+              type: integer
+              minimum: 1000
+              maximum: 30000
+              default: 5000
+              description: "Request timeout in milliseconds"
+            last_triggered_at:
+              type: string
+              format: date-time
+              nullable: true
+              description: "ISO 8601 timestamp of last trigger"
+            trigger_count:
+              type: integer
+              minimum: 0
+              default: 0
+              description: "Number of times this webhook has been triggered"
+
+    # NFCAssociation - Union type for backward compatibility
+    NFCAssociation:
+      oneOf:
+        - $ref: '#/components/schemas/NFCPlaylistAssociation'
+        - $ref: '#/components/schemas/NFCWebhookAssociation'
+      discriminator:
+        propertyName: association_type
 
     SystemInfo:
       type: object
@@ -1353,7 +1430,22 @@ paths:
   /api/nfc/associate:
     post:
       tags: [NFC]
-      summary: Associate NFC tag with playlist
+      summary: Associate NFC tag with playlist or webhook
+      description: |
+        Create an association between an NFC tag and either a playlist or a webhook.
+
+        **Playlist Association:**
+        - Requires `playlist_id` field
+        - Tag will trigger playlist playback when scanned
+
+        **Webhook Association:**
+        - Requires `webhook_url` field
+        - Tag will trigger HTTP webhook when scanned
+        - Supports variable substitution in URL, headers, and body:
+          - `{{tag_id}}` - NFC tag identifier
+          - `{{timestamp}}` - ISO 8601 UTC timestamp
+          - `{{device_id}}` - Device unique identifier
+          - `{{trigger_count}}` - Number of times triggered
       operationId: associateNFC
       requestBody:
         required: true
@@ -1362,18 +1454,71 @@ paths:
             schema:
               type: object
               required:
-                - playlist_id
                 - tag_id
+                - association_type
               properties:
-                playlist_id:
-                  type: string
                 tag_id:
                   type: string
+                  description: "NFC tag unique identifier"
+                association_type:
+                  type: string
+                  enum: [playlist, webhook]
+                  description: "Type of association to create"
                 client_op_id:
                   type: string
+                  description: "Optional client operation ID for tracking"
+
+                # Playlist fields (required if association_type=playlist)
+                playlist_id:
+                  type: string
+                  description: "Playlist ID (required for playlist associations)"
+
+                # Webhook fields (required if association_type=webhook)
+                webhook_url:
+                  type: string
+                  format: uri
+                  description: "Webhook URL (required for webhook associations)"
+                webhook_method:
+                  type: string
+                  enum: [GET, POST, PUT]
+                  default: POST
+                webhook_headers:
+                  type: object
+                  additionalProperties:
+                    type: string
+                webhook_body:
+                  type: string
+                webhook_timeout_ms:
+                  type: integer
+                  minimum: 1000
+                  maximum: 30000
+                  default: 5000
+
+            examples:
+              playlistAssociation:
+                summary: Playlist Association
+                value:
+                  tag_id: "04:A3:2C:1A:5D:6E:80"
+                  association_type: "playlist"
+                  playlist_id: "playlist-123"
+                  client_op_id: "op-uuid-1234"
+
+              webhookAssociation:
+                summary: Webhook Association
+                value:
+                  tag_id: "04:A3:2C:1A:5D:6E:80"
+                  association_type: "webhook"
+                  webhook_url: "https://api.example.com/webhook"
+                  webhook_method: "POST"
+                  webhook_headers:
+                    Authorization: "Bearer token123"
+                  webhook_body: '{"tag_id": "{{tag_id}}", "timestamp": "{{timestamp}}"}'
+                  webhook_timeout_ms: 5000
+                  client_op_id: "op-uuid-5678"
+
       responses:
         '200':
-          description: NFC association created
+          description: Association created successfully
           content:
             application/json:
               schema:
@@ -1386,6 +1531,20 @@ paths:
                         properties:
                           association:
                             $ref: '#/components/schemas/NFCAssociation'
+
+        '400':
+          description: Invalid request (validation errors)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnifiedResponse'
+
+        '404':
+          description: Playlist not found (for playlist associations)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnifiedResponse'
 
   /api/nfc/associate/{tag_id}:
     delete:
@@ -1409,6 +1568,115 @@ paths:
       responses:
         '200':
           description: Association removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnifiedResponse'
+
+  /api/nfc/webhook/test:
+    post:
+      tags: [NFC]
+      summary: Test webhook configuration
+      description: |
+        Validates webhook URL and sends a test request to verify connectivity.
+
+        This endpoint does not create an association, it only tests the webhook.
+        Use this before creating a webhook association to ensure it works.
+      operationId: testWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - webhook_url
+              properties:
+                webhook_url:
+                  type: string
+                  format: uri
+                webhook_method:
+                  type: string
+                  enum: [GET, POST, PUT]
+                  default: POST
+                webhook_headers:
+                  type: object
+                  additionalProperties:
+                    type: string
+                webhook_body:
+                  type: string
+                webhook_timeout_ms:
+                  type: integer
+                  minimum: 1000
+                  maximum: 30000
+                  default: 5000
+
+            example:
+              webhook_url: "https://webhook.site/unique-id"
+              webhook_method: "POST"
+              webhook_headers:
+                Content-Type: "application/json"
+              webhook_body: '{"test": true}'
+              webhook_timeout_ms: 5000
+
+      responses:
+        '200':
+          description: Webhook test result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/UnifiedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required:
+                          - success
+                          - response_time_ms
+                        properties:
+                          success:
+                            type: boolean
+                            description: "True if webhook responded with 2xx status"
+                          status_code:
+                            type: integer
+                            nullable: true
+                            description: "HTTP status code from webhook (null if connection failed)"
+                          response_time_ms:
+                            type: integer
+                            description: "Time taken for request in milliseconds"
+                          error:
+                            type: string
+                            nullable: true
+                            description: "Error message if test failed"
+
+              examples:
+                success:
+                  summary: Successful Test
+                  value:
+                    status: success
+                    message: "Webhook test successful"
+                    data:
+                      success: true
+                      status_code: 200
+                      response_time_ms: 234
+                      error: null
+                    timestamp: 1706356800
+
+                failure:
+                  summary: Failed Test
+                  value:
+                    status: success
+                    message: "Webhook test completed"
+                    data:
+                      success: false
+                      status_code: null
+                      response_time_ms: 5000
+                      error: "Connection timeout"
+                    timestamp: 1706356800
+
+        '400':
+          description: Invalid webhook configuration
           content:
             application/json:
               schema:
