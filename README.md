@@ -4,6 +4,18 @@
 
 This repository contains the canonical API and Socket.IO contract definitions for TheOpenMusicBox, with automatic code generation for multiple programming languages.
 
+## 🎉 Latest Release: v2.0.0 - NFC Webhook Associations
+
+**New in v2.0.0:** NFC tags can now trigger HTTP webhooks as an alternative to playlists!
+
+**Important:** This is a **breaking change**. See [MIGRATION_GUIDE_v2.0.0.md](MIGRATION_GUIDE_v2.0.0.md) for migration instructions.
+
+**Quick Links:**
+- 📖 [Migration Guide](MIGRATION_GUIDE_v2.0.0.md) - How to upgrade from v1.x
+- 🗺️ [Master Plan](WEBHOOK_ASSOCIATIONS_MASTER_PLAN.md) - Technical architecture
+- 📋 [Week 1 Summary](WEEK1_COMPLETION_SUMMARY.md) - Current status
+- 📝 [CHANGELOG](CHANGELOG.md) - All changes
+
 ## 📋 Purpose
 
 TheOpenMusicBox is a Raspberry Pi-based music player system with multiple client applications:
@@ -25,15 +37,15 @@ This contracts repository ensures **consistency** and **type safety** across all
 ```
 tomb-contracts/
 ├── schemas/                      # Source of truth (edit these)
-│   ├── openapi.yaml             # REST API contracts
-│   └── socketio-events.json     # Socket.IO event contracts
+│   ├── openapi.yaml             # REST API contracts (v2.0.0)
+│   └── socketio_contracts.json  # Socket.IO event contracts
 ├── generated/                    # Auto-generated (gitignored)
 │   ├── dart/                    # Flutter/Dart client
 │   ├── cpp/                     # C++ client
 │   ├── typescript/              # TypeScript types
 │   └── python/                  # Python models
 ├── releases/                     # Versioned releases (committed)
-│   └── v3.0.0/
+│   └── v2.0.0/
 │       ├── dart/
 │       ├── cpp/
 │       ├── typescript/
@@ -41,6 +53,11 @@ tomb-contracts/
 ├── scripts/
 │   ├── generate-all.sh          # Generate for all languages
 │   └── generators/              # Individual language generators
+├── docs/                         # Documentation
+│   ├── MIGRATION_GUIDE_v2.0.0.md
+│   ├── WEBHOOK_ASSOCIATIONS_MASTER_PLAN.md
+│   ├── WEEK1_COMPLETION_SUMMARY.md
+│   └── PROJECT_COORDINATION_MASTER_PLAN.md
 └── .github/workflows/            # CI/CD automation
 ```
 
@@ -101,14 +118,14 @@ Add to `pubspec.yaml`:
 ```yaml
 dependencies:
   tomb_contracts:
-    path: ./contracts/releases/v3.0.0/dart/
+    path: ./contracts/releases/v2.0.0/dart/
 ```
 
 **Option B: Direct Copy (Production)**
 
 ```bash
 # Copy generated Dart package to your project
-cp -r contracts/releases/v3.0.0/dart/ lib/api/tomb_contracts/
+cp -r contracts/releases/v2.0.0/dart/ lib/api/tomb_contracts/
 ```
 
 **Usage in Dart:**
@@ -139,7 +156,7 @@ git submodule add https://github.com/theopenmusicbox/tomb-contracts.git contract
 
 Add to `CMakeLists.txt`:
 ```cmake
-add_subdirectory(contracts/releases/v3.0.0/cpp)
+add_subdirectory(contracts/releases/v2.0.0/cpp)
 target_link_libraries(your_app TombContracts)
 ```
 
@@ -174,13 +191,28 @@ git submodule add https://github.com/theopenmusicbox/tomb-contracts.git contract
 
 **Usage in TypeScript:**
 ```typescript
-import type { PlayerState, Playlist, Track } from '../contracts/releases/v3.0.0/typescript';
+import type { PlayerState, Playlist, Track, NFCWebhookAssociation } from '../contracts/releases/v2.0.0/typescript';
 
 // Full type safety for API responses
 async function getPlayer(): Promise<PlayerState> {
   const response = await fetch('/api/player/status');
   const json = await response.json();
   return json.data; // TypeScript knows this is PlayerState
+}
+
+// NEW in v2.0.0: Create webhook association
+async function createWebhookAssociation(tagId: string, webhookUrl: string) {
+  await fetch('/api/nfc/associate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      tag_id: tagId,
+      association_type: 'webhook',
+      webhook_url: webhookUrl,
+      webhook_method: 'POST',
+      webhook_body: JSON.stringify({ tag_id: '{{tag_id}}', timestamp: '{{timestamp}}' })
+    })
+  });
 }
 ```
 
@@ -235,15 +267,20 @@ state = PlayerState(
 
 We use **semantic versioning** (semver):
 
-- `v3.0.0` - Major version (breaking changes)
-- `v3.1.0` - Minor version (new features, backward compatible)
-- `v3.0.1` - Patch version (bug fixes)
+- `v2.0.0` - Major version (breaking changes) - **CURRENT**
+- `v2.1.0` - Minor version (new features, backward compatible)
+- `v2.0.1` - Patch version (bug fixes)
 
 **When to bump versions:**
 
-- **Major (v4.0.0)**: Breaking API changes (rename fields, remove endpoints)
-- **Minor (v3.1.0)**: Add new endpoints or fields (backward compatible)
-- **Patch (v3.0.1)**: Fix documentation or generation scripts
+- **Major (v3.0.0)**: Breaking API changes (rename fields, remove endpoints)
+- **Minor (v2.1.0)**: Add new endpoints or fields (backward compatible)
+- **Patch (v2.0.1)**: Fix documentation or generation scripts
+
+**Recent Version History:**
+- `v2.0.0` (2025-01-27): **Breaking** - Added NFC webhook associations
+- `v1.5.0` (2025-01-17): Added volume endpoint fix
+- `v1.0.0` (2025-01-09): Initial OpenAPI specification
 
 ### Updating Client Applications
 
@@ -253,11 +290,13 @@ We use **semantic versioning** (semver):
    ```bash
    cd your-app/contracts
    git fetch origin
-   git checkout v3.1.0
+   git checkout v2.0.0
    cd ..
    git add contracts
-   git commit -m "Update contracts to v3.1.0"
+   git commit -m "Update contracts to v2.0.0"
    ```
+
+   **⚠️ Important for v2.0.0:** See [MIGRATION_GUIDE_v2.0.0.md](MIGRATION_GUIDE_v2.0.0.md) for breaking changes!
 
 2. Regenerate if needed:
    ```bash
@@ -273,9 +312,58 @@ Full OpenAPI documentation is available at:
 - **Local**: `schemas/openapi.yaml`
 - **Swagger UI**: Import `openapi.yaml` into [Swagger Editor](https://editor.swagger.io/)
 
+**Key Endpoint Categories:**
+- **Player**: `/api/player/*` - Playback control
+- **Playlists**: `/api/playlists/*` - Playlist management
+- **NFC**: `/api/nfc/*` - NFC associations (playlist or webhook)
+- **Uploads**: `/api/uploads/*` - File upload management
+- **YouTube**: `/api/youtube/*` - YouTube download
+- **System**: `/api/system/*` - System information
+
+### 🆕 NFC Webhook Associations (v2.0.0)
+
+**New Feature:** NFC tags can now trigger HTTP webhooks!
+
+**Create Webhook Association:**
+```bash
+POST /api/nfc/associate
+{
+  "tag_id": "04:A3:2C:1A:5D:6E:80",
+  "association_type": "webhook",
+  "webhook_url": "https://api.example.com/hook",
+  "webhook_method": "POST",
+  "webhook_body": "{\"tag\": \"{{tag_id}}\", \"time\": \"{{timestamp}}\"}"
+}
+```
+
+**Variable Substitution:**
+- `{{tag_id}}` - NFC tag UID
+- `{{timestamp}}` - ISO 8601 timestamp
+- `{{device_id}}` - Device identifier
+- `{{trigger_count}}` - Number of triggers
+
+**Test Webhook:**
+```bash
+POST /api/nfc/webhook/test
+{
+  "webhook_url": "https://webhook.site/unique-id",
+  "webhook_method": "POST"
+}
+```
+
+**Use Cases:**
+- Trigger IFTTT applets
+- Call Zapier webhooks
+- Control Home Assistant
+- Send notifications to Slack/Discord
+- Update Google Sheets
+- Custom IoT integrations
+
+See [WEBHOOK_ASSOCIATIONS_MASTER_PLAN.md](WEBHOOK_ASSOCIATIONS_MASTER_PLAN.md) for complete details.
+
 ### Socket.IO Events
 
-Socket.IO contract definitions are in `schemas/socketio-events.json`.
+Socket.IO contract definitions are in `schemas/socketio_contracts.json`.
 
 **Key event categories:**
 - **Connection**: `connect`, `disconnect`, `connection_status`
@@ -283,6 +371,7 @@ Socket.IO contract definitions are in `schemas/socketio-events.json`.
 - **Operations**: `ack:op`, `err:op`
 - **Subscriptions**: `join:playlist`, `leave:playlist`
 - **Real-time**: `upload:progress`, `youtube:progress`
+- **🆕 Webhooks**: `webhook_trigger_result` - Real-time webhook execution results
 
 ## 🧪 Testing
 
@@ -339,7 +428,7 @@ vcpkg install cpprestsdk
 ```yaml
 dependencies:
   tomb_contracts:
-    path: ./contracts/releases/v3.0.0/dart/  # Check this path
+    path: ./contracts/releases/v2.0.0/dart/  # Check this path
 ```
 
 ## 🤝 Contributing
