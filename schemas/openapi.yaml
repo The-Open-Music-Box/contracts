@@ -6,7 +6,7 @@ info:
 
     All API responses follow the UnifiedResponseService format with standardized envelopes.
     This specification is the source of truth for all client implementations (Web, Flutter, C++).
-  version: 3.1.0
+  version: 3.2.0
   contact:
     name: TheOpenMusicBox
     url: https://github.com/theopenmusicbox/tomb-rpi
@@ -298,6 +298,53 @@ components:
         server_seq:
           type: number
           description: Server sequence number for state synchronization
+
+    BackendCapabilities:
+      type: object
+      description: |
+        Backend capability flags that declare what features and formats this backend supports.
+        Allows Flutter app and other clients to auto-configure based on platform constraints.
+      required:
+        - upload_format
+        - max_chunk_size
+      properties:
+        upload_format:
+          type: string
+          enum:
+            - raw_binary
+            - multipart
+          description: |
+            Format supported for audio file chunk uploads:
+            - `raw_binary`: Stream binary data directly (ESP32 - ESPAsyncWebServer body handler)
+            - `multipart`: Multipart form-data with 'file' field (RPI - FastAPI File upload)
+          example: raw_binary
+        max_chunk_size:
+          type: integer
+          minimum: 1024
+          maximum: 10485760
+          description: |
+            Maximum size of a single chunk in bytes.
+            - ESP32: 32768 (32KB) - limited by available heap memory
+            - RPI: 1048576 (1MB) - more resources available
+          example: 32768
+        player_monitoring:
+          type: boolean
+          default: true
+          description: |
+            If the backend can monitor audio playback position in real-time.
+            - ESP32: false (bandwidth/CPU limited)
+            - RPI: true (sufficient resources)
+          example: false
+        nfc_available:
+          type: boolean
+          default: false
+          description: If NFC reader (PN532) is detected and functional
+          example: true
+        led_control:
+          type: boolean
+          default: false
+          description: If LED control (strip/hat) is available
+          example: true
 
     HealthStatus:
       type: object
@@ -1506,15 +1553,25 @@ paths:
                           - version
                           - hostname
                           - uptime
+                          - capabilities
                         properties:
                           system_info:
                             $ref: '#/components/schemas/SystemInfo'
                           version:
                             type: string
+                            description: Firmware/application version
+                            example: "3.2.0"
                           hostname:
                             type: string
+                            description: Device hostname
+                            example: "theopenmusicbox"
                           uptime:
                             type: number
+                            description: System uptime in seconds
+                            example: 3600
+                          capabilities:
+                            $ref: '#/components/schemas/BackendCapabilities'
+                            description: Platform-specific capabilities and supported formats
 
   /api/system/logs:
     get:
