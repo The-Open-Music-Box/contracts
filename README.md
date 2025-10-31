@@ -233,17 +233,32 @@ state = PlayerState(
 
 ### Versioning Strategy
 
-We use **semantic versioning** (semver):
+We use **semantic versioning** (semver) with automatic version detection:
 
-- `v3.2.0` - Current version (OpenAPI), `v3.1.0` (Socket.IO)
-- `v3.x.0` - Minor version (new features, backward compatible)
-- `v3.x.x` - Patch version (bug fixes)
+- **Version Source**: Versions are read from `schemas/openapi.yaml` (line 9: `version: X.Y.Z`)
+- **Release Tags**: Point to generated contract commits (e.g., `v3.2.0` → commit with full client libraries)
+- **Release Directories**: Named as `{version}-{commit-hash}` (e.g., `releases/3.2.0-799bea2/`)
+
+**Current Versions:**
+- OpenAPI: `v3.2.0`
+- Socket.IO: `v3.1.0`
 
 **When to bump versions:**
 
 - **Major (v4.0.0)**: Breaking API changes (rename fields, remove endpoints)
 - **Minor (v3.3.0)**: Add new endpoints or fields (backward compatible)
 - **Patch (v3.2.1)**: Fix documentation or generation scripts
+
+**How versions are managed:**
+
+1. **Edit schema version**: Update `version` field in `schemas/openapi.yaml`
+2. **Push to main**: GitHub Actions automatically detects the version
+3. **Auto-generation**: Creates `releases/{version}-{commit-hash}/` directory
+4. **Auto-tagging**: Tags the generation commit as `v{version}`
+
+**Why tags point to generation commits:**
+
+Tags like `v3.2.0` point to commits containing generated client libraries (not schema commits). This ensures that checking out a version tag gives you **complete, ready-to-use packages** for all languages (Dart, Python, C++, TypeScript).
 
 ### Updating Client Applications
 

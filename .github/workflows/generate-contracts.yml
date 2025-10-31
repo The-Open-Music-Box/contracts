@@ -46,10 +46,12 @@ jobs:
       - name: Get version from commit
         id: version
         run: |
-          # Use commit short SHA as version suffix
-          VERSION="3.0.0-$(git rev-parse --short HEAD)"
+          # Extract version from OpenAPI schema
+          SCHEMA_VERSION=$(grep -oP '^  version: \K[\d.]+' schemas/openapi.yaml)
+          VERSION="${SCHEMA_VERSION}-$(git rev-parse --short HEAD)"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
+          echo "Schema version: $SCHEMA_VERSION"
+          echo "Full version: $VERSION"
 
       - name: Copy to releases directory
         run: |

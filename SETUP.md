@@ -172,33 +172,53 @@ async function getPlayer(): Promise<PlayerState> {
 
 ## Step 8: Version and Release
 
-### Create First Release
+### Automatic Versioning
 
-```bash
-cd tomb-contracts
+Versions are **automatically managed** by GitHub Actions:
 
-# Tag the current version
-git tag -a v3.2.0 -m "Current stable release"
-git push origin v3.2.0
+1. **Update schema version:**
+   ```bash
+   # Edit schemas/openapi.yaml
+   vim schemas/openapi.yaml
+   # Change line 9: version: 3.3.0
+   ```
 
-# Copy generated code to releases
-mkdir -p releases/v3.2.0
-cp -r generated/* releases/v3.2.0/
-git add releases/
-git commit -m "Release v3.2.0"
-git push
-```
+2. **Commit and push:**
+   ```bash
+   git add schemas/openapi.yaml
+   git commit -m "feat: bump to v3.3.0 - add new features"
+   git push origin main
+   ```
+
+3. **GitHub Actions automatically:**
+   - Reads version from `schemas/openapi.yaml`
+   - Generates clients for all languages
+   - Creates `releases/3.3.0-{commit-hash}/` directory
+   - Tags the generation commit as `v3.3.0`
+   - Pushes everything back to the repository
+
+**Important**: Version tags point to **generation commits** (containing full client libraries), not schema commits. This ensures `git checkout v3.3.0` gives you complete, ready-to-use packages.
 
 ### Update Client Apps to Use Specific Version
 
-**Flutter:**
+**Flutter (Option 1: Git reference):**
 ```yaml
 dependencies:
   tomb_contracts:
     git:
       url: https://github.com/theopenmusicbox/tomb-contracts.git
       ref: v3.2.0
-      path: releases/v3.2.0/dart/
+      path: releases/3.2.0-799bea2/dart/
+```
+
+**Flutter (Option 2: Submodule):**
+```bash
+cd your-flutter-app/contracts
+git fetch origin
+git checkout v3.2.0
+cd ../..
+# Update pubspec.yaml path if needed
+flutter pub get
 ```
 
 **C++ CMakeLists.txt:**
@@ -219,6 +239,7 @@ FetchContent_MakeAvailable(tomb_contracts)
 1. **Make contract changes:**
    ```bash
    vim schemas/openapi.yaml
+   # Make your changes, optionally bump version if needed
    ```
 
 2. **Test locally:**
@@ -234,14 +255,17 @@ FetchContent_MakeAvailable(tomb_contracts)
    ```
 
 4. **GitHub Actions automatically:**
-   - Generates all clients
-   - Creates versioned release
-   - Tags commit
+   - Detects version from `schemas/openapi.yaml`
+   - Generates all client libraries
+   - Creates `releases/{version}-{commit-hash}/` directory
+   - Tags the generation commit with `v{version}`
+   - Pushes changes back to repository
 
 5. **Update satellite apps:**
    ```bash
    cd flutter-app/contracts
-   git pull origin main
+   git fetch origin
+   git checkout v3.2.0  # or desired version tag
    cd ../..
    flutter pub get
    ```
