@@ -76,7 +76,7 @@ Edit `pubspec.yaml`:
 ```yaml
 dependencies:
   tomb_contracts:
-    path: ./contracts/generated/dart/
+    path: ./contracts/releases/v3.2.0/dart/
 ```
 
 ### Option B: Direct Path Reference
@@ -110,7 +110,7 @@ git submodule add https://github.com/theopenmusicbox/tomb-contracts.git contract
 
 Edit `CMakeLists.txt`:
 ```cmake
-add_subdirectory(contracts/generated/cpp)
+add_subdirectory(contracts/releases/v3.2.0/cpp)
 target_link_libraries(your_app TombContracts)
 ```
 
@@ -154,7 +154,7 @@ git submodule add https://github.com/theopenmusicbox/tomb-contracts.git contract
 ### Usage
 
 ```typescript
-import type { PlayerState, Playlist } from '../contracts/generated/typescript';
+import type { PlayerState, Playlist } from '../contracts/releases/v3.2.0/typescript';
 
 async function getPlayer(): Promise<PlayerState> {
   const response = await fetch('/api/player/status');
@@ -177,15 +177,15 @@ async function getPlayer(): Promise<PlayerState> {
 ```bash
 cd tomb-contracts
 
-# Tag the initial version
-git tag -a v3.0.0 -m "Initial release"
-git push origin v3.0.0
+# Tag the current version
+git tag -a v3.2.0 -m "Current stable release"
+git push origin v3.2.0
 
 # Copy generated code to releases
-mkdir -p releases/v3.0.0
-cp -r generated/* releases/v3.0.0/
+mkdir -p releases/v3.2.0
+cp -r generated/* releases/v3.2.0/
 git add releases/
-git commit -m "Release v3.0.0"
+git commit -m "Release v3.2.0"
 git push
 ```
 
@@ -197,8 +197,8 @@ dependencies:
   tomb_contracts:
     git:
       url: https://github.com/theopenmusicbox/tomb-contracts.git
-      ref: v3.0.0
-      path: releases/v3.0.0/dart/
+      ref: v3.2.0
+      path: releases/v3.2.0/dart/
 ```
 
 **C++ CMakeLists.txt:**
@@ -207,7 +207,7 @@ include(FetchContent)
 FetchContent_Declare(
   tomb_contracts
   GIT_REPOSITORY https://github.com/theopenmusicbox/tomb-contracts.git
-  GIT_TAG v3.0.0
+  GIT_TAG v3.2.0
 )
 FetchContent_MakeAvailable(tomb_contracts)
 ```

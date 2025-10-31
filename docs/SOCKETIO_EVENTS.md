@@ -31,6 +31,28 @@ Events related to WebSocket connection lifecycle.
 ```
 **Description:** Server confirms connection and provides initial state
 
+#### `client_ping`
+**Direction:** Client → Server
+**Payload:**
+```typescript
+{
+  timestamp: number
+}
+```
+**Description:** Client health check ping
+
+#### `client_pong`
+**Direction:** Server → Client
+**Payload:**
+```typescript
+{
+  timestamp: number,
+  server_time: number,
+  server_seq: number
+}
+```
+**Description:** Server health check response
+
 ---
 
 ### 2. State Events
@@ -60,6 +82,8 @@ Server-authoritative state broadcasts using standardized envelope format.
   active_playlist_id: string | null,
   active_playlist_title: string | null,
   active_track_id: string | null,
+  active_track_number: number | null,
+  active_track_title: string | null,
   position_ms: number,
   duration_ms: number | null,
   can_prev: boolean,
@@ -68,7 +92,7 @@ Server-authoritative state broadcasts using standardized envelope format.
   server_seq: number
 }
 ```
-**Description:** Complete player state update
+**Description:** Complete player state update. Note: Individual track fields are provided instead of a full Track object.
 
 #### `state:track_position`
 **Direction:** Server → Client
@@ -162,6 +186,17 @@ Server-authoritative state broadcasts using standardized envelope format.
 }
 ```
 
+#### `state:volume_changed`
+**Direction:** Server → Client
+**Frequency:** On volume change
+**Data:**
+```typescript
+{
+  volume: number  // 0-100
+}
+```
+**Description:** Volume level changed notification
+
 ---
 
 ### 3. Subscription Events
@@ -241,7 +276,59 @@ Operation acknowledgments and errors.
 
 ---
 
-### 5. Upload Events
+### 5. Sync Events
+
+Client-server state synchronization.
+
+#### `sync:request`
+**Direction:** Client → Server
+**Payload:**
+```typescript
+{
+  last_global_seq?: number,
+  last_playlist_seqs?: Record<string, number>,
+  requested_rooms?: string[]
+}
+```
+**Description:** Client requests state synchronization
+
+#### `sync:complete`
+**Direction:** Server → Client
+**Payload:**
+```typescript
+{
+  current_global_seq: number,
+  synced_rooms: string[]
+}
+```
+**Description:** Server confirms synchronization complete
+
+#### `sync:error`
+**Direction:** Server → Client
+**Payload:**
+```typescript
+{
+  error: string,
+  requested_rooms?: string[]
+}
+```
+**Description:** Synchronization error
+
+#### `client:request_current_state`
+**Direction:** Client → Server
+**Payload:**
+```typescript
+{
+  timestamp?: number,
+  client_id?: string,
+  requested_states?: string[]
+}
+```
+**Description:** Client requests immediate state snapshot
+
+---
+
+### 6. Upload Events
 
 File upload progress tracking.
 
@@ -285,7 +372,7 @@ File upload progress tracking.
 
 ---
 
-### 6. NFC Events
+### 7. NFC Events
 
 NFC tag association workflow.
 
@@ -298,6 +385,29 @@ NFC tag association workflow.
   client_op_id?: string
 }
 ```
+**Description:** Start NFC tag association session
+
+#### `stop_nfc_link`
+**Direction:** Client → Server
+**Payload:**
+```typescript
+{
+  playlist_id: string,
+  client_op_id?: string
+}
+```
+**Description:** Cancel ongoing NFC association session
+
+#### `override_nfc_tag`
+**Direction:** Client → Server
+**Payload:**
+```typescript
+{
+  playlist_id: string,
+  client_op_id?: string
+}
+```
+**Description:** Override existing NFC tag association
 
 #### `nfc_association_state`
 **Direction:** Server → Client
@@ -309,9 +419,53 @@ NFC tag association workflow.
   tag_id?: string,
   message?: string,
   expires_at?: number,
+  existing_playlist?: string,
   server_seq: number
 }
 ```
+**Description:** NFC association state changes
+
+---
+
+### 8. YouTube Events
+
+YouTube download progress tracking.
+
+#### `youtube:progress`
+**Direction:** Server → Client
+**Payload:**
+```typescript
+{
+  task_id: string,
+  status: "pending" | "downloading" | "processing" | "completed" | "failed",
+  progress_percent?: number,
+  current_step?: string
+}
+```
+**Description:** YouTube download progress updates
+
+#### `youtube:complete`
+**Direction:** Server → Client
+**Payload:**
+```typescript
+{
+  task_id: string,
+  track: Track,
+  playlist_id: string
+}
+```
+**Description:** YouTube download completed successfully
+
+#### `youtube:error`
+**Direction:** Server → Client
+**Payload:**
+```typescript
+{
+  task_id: string,
+  message: string
+}
+```
+**Description:** YouTube download failed
 
 ---
 

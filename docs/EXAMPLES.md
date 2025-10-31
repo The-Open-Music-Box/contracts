@@ -10,7 +10,7 @@ Practical examples for using TheOpenMusicBox contracts in each supported languag
 # pubspec.yaml
 dependencies:
   tomb_contracts:
-    path: ../tomb-contracts/releases/v3.0.0/dart/
+    path: ../tomb-contracts/releases/v3.2.0/dart/
   dio: ^5.0.0
 ```
 
@@ -31,8 +31,8 @@ void main() async {
     final PlayerState state = response.data;
 
     print('Playing: ${state.isPlaying}');
-    print('Track: ${state.activeTrack?.title}');
-    print('Position: ${state.positionMs}ms / ${state.durationMs}ms');
+    print('Track: ${state.activeTrackTitle ?? "No track"}');
+    print('Position: ${state.positionMs}ms / ${state.durationMs ?? 0}ms');
   } catch (e) {
     print('Error: $e');
   }
@@ -109,7 +109,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     return Column(
       children: [
         Text(
-          playerState!.activeTrack?.title ?? 'No track',
+          playerState!.activeTrackTitle ?? 'No track',
           style: Theme.of(context).textTheme.headline6,
         ),
         Slider(
@@ -156,7 +156,7 @@ project(TombClient)
 set(CMAKE_CXX_STANDARD 17)
 
 # Add contracts library
-add_subdirectory(../tomb-contracts/releases/v3.0.0/cpp)
+add_subdirectory(../tomb-contracts/releases/v3.2.0/cpp)
 
 add_executable(tomb_client main.cpp)
 target_link_libraries(tomb_client TombContracts)
@@ -185,8 +185,8 @@ int main() {
         std::cout << "Playing: " << (state.isPlaying ? "Yes" : "No") << std::endl;
         std::cout << "Position: " << state.positionMs << "ms" << std::endl;
 
-        if (state.activeTrack) {
-            std::cout << "Track: " << state.activeTrack->title << std::endl;
+        if (state.activeTrackTitle) {
+            std::cout << "Track: " << *state.activeTrackTitle << std::endl;
         }
 
         // Toggle playback
@@ -307,7 +307,7 @@ import type {
   Playlist,
   Track,
   UnifiedResponse
-} from '../tomb-contracts/releases/v3.0.0/typescript';
+} from '../tomb-contracts/releases/v3.2.0/typescript';
 ```
 
 ### API Client
@@ -375,7 +375,7 @@ async function main() {
   // Get player status
   const state = await api.getPlayerStatus();
   console.log('Playing:', state.is_playing);
-  console.log('Track:', state.active_track?.title);
+  console.log('Track:', state.active_track_title || 'No track');
 
   // Toggle playback
   await api.playerToggle('web-client-' + Date.now());
@@ -394,8 +394,7 @@ async function main() {
 <template>
   <div class="player">
     <div v-if="playerState">
-      <h2>{{ playerState.active_track?.title || 'No track' }}</h2>
-      <p>{{ playerState.active_track?.artist }}</p>
+      <h2>{{ playerState.active_track_title || 'No track' }}</h2>
 
       <input
         type="range"
@@ -427,7 +426,7 @@ async function main() {
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import type { PlayerState } from '../contracts/releases/v3.0.0/typescript';
+import type { PlayerState } from '../contracts/releases/v3.2.0/typescript';
 import { TombApiClient } from './api-client';
 
 const api = new TombApiClient();
@@ -486,7 +485,7 @@ pydantic
 ```python
 import requests
 from typing import Optional
-from contracts.releases.v3_0_0.python.models import PlayerState, Playlist
+from contracts.releases.v3_2_0.python.models import PlayerState, Playlist
 
 class TombApiClient:
     def __init__(self, base_url: str = "http://tomb-rpi.local:8000"):
@@ -537,7 +536,7 @@ if __name__ == "__main__":
     # Get player status (fully typed!)
     state = api.get_player_status()
     print(f"Playing: {state.is_playing}")
-    print(f"Track: {state.active_track.title if state.active_track else 'None'}")
+    print(f"Track: {state.active_track_title or 'None'}")
     print(f"Position: {state.position_ms}ms")
 
     # Toggle playback

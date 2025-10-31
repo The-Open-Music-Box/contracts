@@ -101,14 +101,14 @@ Add to `pubspec.yaml`:
 ```yaml
 dependencies:
   tomb_contracts:
-    path: ./contracts/releases/v3.0.0/dart/
+    path: ./contracts/releases/v3.2.0/dart/
 ```
 
 **Option B: Direct Copy (Production)**
 
 ```bash
 # Copy generated Dart package to your project
-cp -r contracts/releases/v3.0.0/dart/ lib/api/tomb_contracts/
+cp -r contracts/releases/v3.2.0/dart/ lib/api/tomb_contracts/
 ```
 
 **Usage in Dart:**
@@ -139,7 +139,7 @@ git submodule add https://github.com/theopenmusicbox/tomb-contracts.git contract
 
 Add to `CMakeLists.txt`:
 ```cmake
-add_subdirectory(contracts/releases/v3.0.0/cpp)
+add_subdirectory(contracts/releases/v3.2.0/cpp)
 target_link_libraries(your_app TombContracts)
 ```
 
@@ -174,7 +174,7 @@ git submodule add https://github.com/theopenmusicbox/tomb-contracts.git contract
 
 **Usage in TypeScript:**
 ```typescript
-import type { PlayerState, Playlist, Track } from '../contracts/releases/v3.0.0/typescript';
+import type { PlayerState, Playlist, Track } from '../contracts/releases/v3.2.0/typescript';
 
 // Full type safety for API responses
 async function getPlayer(): Promise<PlayerState> {
@@ -188,7 +188,7 @@ async function getPlayer(): Promise<PlayerState> {
 
 **Usage in Python:**
 ```python
-from contracts.releases.v3_0_0.python.models import PlayerState, Playlist
+from contracts.releases.v3_2_0.python.models import PlayerState, Playlist
 
 # Use Pydantic models for validation
 state = PlayerState(
@@ -227,7 +227,7 @@ state = PlayerState(
 
 4. **GitHub Actions automatically:**
    - Generates code for all languages
-   - Creates versioned release in `releases/v3.0.0-{commit-sha}/`
+   - Creates versioned release in `releases/v3.2.0-{commit-sha}/`
    - Tags the commit
    - Pushes changes back to repo
 
@@ -235,15 +235,15 @@ state = PlayerState(
 
 We use **semantic versioning** (semver):
 
-- `v3.0.0` - Major version (breaking changes)
-- `v3.1.0` - Minor version (new features, backward compatible)
-- `v3.0.1` - Patch version (bug fixes)
+- `v3.2.0` - Current version (OpenAPI), `v3.1.0` (Socket.IO)
+- `v3.x.0` - Minor version (new features, backward compatible)
+- `v3.x.x` - Patch version (bug fixes)
 
 **When to bump versions:**
 
 - **Major (v4.0.0)**: Breaking API changes (rename fields, remove endpoints)
-- **Minor (v3.1.0)**: Add new endpoints or fields (backward compatible)
-- **Patch (v3.0.1)**: Fix documentation or generation scripts
+- **Minor (v3.3.0)**: Add new endpoints or fields (backward compatible)
+- **Patch (v3.2.1)**: Fix documentation or generation scripts
 
 ### Updating Client Applications
 
@@ -253,10 +253,10 @@ We use **semantic versioning** (semver):
    ```bash
    cd your-app/contracts
    git fetch origin
-   git checkout v3.1.0
+   git checkout v3.2.0
    cd ..
    git add contracts
-   git commit -m "Update contracts to v3.1.0"
+   git commit -m "Update contracts to v3.2.0"
    ```
 
 2. Regenerate if needed:
@@ -339,7 +339,7 @@ vcpkg install cpprestsdk
 ```yaml
 dependencies:
   tomb_contracts:
-    path: ./contracts/releases/v3.0.0/dart/  # Check this path
+    path: ./contracts/releases/v3.2.0/dart/  # Check this path
 ```
 
 ## 🤝 Contributing
@@ -362,9 +362,25 @@ dependencies:
 
 3. Submit PR with changes
 
+### Recent API Additions (v3.2.0)
+
+**New Player Endpoints:**
+- `POST /api/player/volume` - Set playback volume (0-100)
+
+**New Playlist Endpoints:**
+- `POST /api/playlists/move-track` - Move tracks between playlists
+- `POST /api/playlists/sync` - Synchronize playlist state
+- `DELETE /api/playlists/{playlist_id}/tracks` - Remove multiple tracks
+
+**New Upload Endpoints:**
+- `POST /api/uploads/cleanup` - Clean up stale upload sessions
+
+**New System Endpoints:**
+- `POST /api/system/restart` - Restart the system
+
 ### Adding New Socket.IO Events
 
-1. Edit `schemas/socketio-events.json`:
+1. Edit `schemas/socketio_contracts.json`:
    ```json
    {
      "contracts": {
