@@ -240,7 +240,7 @@ We use **semantic versioning** (semver) with automatic version detection:
 - **Release Directories**: Named as `{version}-{commit-hash}` (e.g., `releases/3.2.0-799bea2/`)
 
 **Current Versions:**
-- OpenAPI: `v3.2.0`
+- OpenAPI: `v3.3.0`
 - Socket.IO: `v3.1.0`
 
 **When to bump versions:**
@@ -376,6 +376,21 @@ dependencies:
    ```
 
 3. Submit PR with changes
+
+### Recent API Additions (v3.3.0)
+
+**Extended Backend Capabilities:**
+- `backend_type` - Backend platform identifier (rpi | esp32 | custom)
+  - Enables better debugging and platform-specific adaptations
+- `position_update_interval_ms` - Recommended position update frequency (100-5000ms)
+  - RPI: 500ms for high-frequency updates
+  - ESP32: 1000-2000ms for reduced network load
+  - Enables adaptive UI update rates in client applications
+- `supports_websocket_position` - WebSocket position streaming support flag
+  - Allows backends to opt out of WebSocket position streaming
+  - Enables fallback to HTTP polling if needed
+
+These fields are returned in the `/api/system/info` endpoint under `capabilities` and allow client applications (Flutter, web, etc.) to automatically adapt their behavior based on backend constraints.
 
 ### Recent API Additions (v3.2.0)
 

@@ -5,6 +5,33 @@ All notable changes to TheOpenMusicBox API contracts will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2025-11-03
+
+### Added
+- **Backend Identification**: Added `backend_type` field to BackendCapabilities
+  - Enum values: `rpi`, `esp32`, `custom`
+  - Enables better debugging and platform-specific adaptations
+
+- **Position Update Configuration**: Added `position_update_interval_ms` field
+  - Allows backends to specify optimal update frequency (100-5000ms)
+  - RPI typically uses 500ms, ESP32 uses 1000-2000ms
+  - Enables adaptive UI update rates in Flutter app
+
+- **WebSocket Position Support**: Added `supports_websocket_position` field
+  - Allows backends to opt out of WebSocket position streaming
+  - Enables fallback to HTTP polling if needed
+
+### Changed
+- Contract version bumped from 3.2.0 to 3.3.0
+
+### Migration Guide
+Backends implementing v3.3.0 should:
+1. Add `backend_type` to capabilities response
+2. Add `position_update_interval_ms` (recommended: 500 for RPI, 1000+ for ESP32)
+3. Add `supports_websocket_position` (default: true)
+
+Clients can safely ignore new fields (backward compatible).
+
 ## [3.2.0] - 2025-01-30
 
 ### Added

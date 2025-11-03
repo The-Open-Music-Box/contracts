@@ -6,7 +6,7 @@ info:
 
     All API responses follow the UnifiedResponseService format with standardized envelopes.
     This specification is the source of truth for all client implementations (Web, Flutter, C++).
-  version: 3.2.0
+  version: 3.3.0
   contact:
     name: TheOpenMusicBox
     url: https://github.com/theopenmusicbox/tomb-rpi
@@ -344,6 +344,43 @@ components:
           type: boolean
           default: false
           description: If LED control (strip/hat) is available
+          example: true
+        backend_type:
+          type: string
+          enum:
+            - rpi
+            - esp32
+            - custom
+          description: |
+            Backend platform identifier for debugging and feature-specific adaptations.
+            - `rpi`: Raspberry Pi backend (Python/FastAPI)
+            - `esp32`: ESP32 firmware backend (C++/Arduino)
+            - `custom`: Custom implementation
+          example: esp32
+        position_update_interval_ms:
+          type: integer
+          minimum: 100
+          maximum: 5000
+          default: 500
+          description: |
+            Recommended position update frequency in milliseconds.
+            Flutter app should use this interval for:
+            - Local interpolation timer frequency
+            - Expected WebSocket event frequency
+
+            Typical values:
+            - RPI: 500ms (high-frequency updates)
+            - ESP32: 1000-2000ms (reduced network load)
+          example: 1000
+        supports_websocket_position:
+          type: boolean
+          default: true
+          description: |
+            If backend can send real-time position updates via WebSocket.
+            If false, Flutter app should fall back to HTTP polling.
+
+            Typically true for both RPI and ESP32, but allows future backends
+            to opt out of WebSocket position streaming.
           example: true
 
     HealthStatus:
