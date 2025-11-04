@@ -5,6 +5,24 @@ All notable changes to TheOpenMusicBox API contracts will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.1] - 2025-11-04
+
+### Fixed
+- **Playlist Update Response**: Changed `PUT /api/playlists/{playlist_id}` response
+  - Now returns full `PlaylistDetailed` object in `data` field (consistent with ESP32 backend)
+  - Previously returned only `{client_op_id: string}`
+  - This fixes JSON parsing errors in Flutter app when renaming playlists
+  - Ensures consistent behavior across RPI and ESP32 backends
+
+### Migration Guide
+Backends implementing v3.3.1 should:
+1. Update `PUT /api/playlists/{playlist_id}` endpoint to return full playlist object after update
+2. Fetch the updated playlist and return it in the `data` field of UnifiedResponse
+
+Clients should:
+1. Update to expect full `PlaylistDetailed` object in update response
+2. Remove any workarounds for refetching playlist after update
+
 ## [3.3.0] - 2025-11-03
 
 ### Added

@@ -6,7 +6,7 @@ info:
 
     All API responses follow the UnifiedResponseService format with standardized envelopes.
     This specification is the source of truth for all client implementations (Web, Flutter, C++).
-  version: 3.3.0
+  version: 3.3.1
   contact:
     name: TheOpenMusicBox
     url: https://github.com/theopenmusicbox/tomb-rpi
@@ -963,7 +963,7 @@ paths:
                   type: string
       responses:
         '200':
-          description: Update confirmation
+          description: Updated playlist with full details
           content:
             application/json:
               schema:
@@ -972,10 +972,7 @@ paths:
                   - type: object
                     properties:
                       data:
-                        type: object
-                        properties:
-                          client_op_id:
-                            type: string
+                        $ref: '#/components/schemas/PlaylistDetailed'
 
     delete:
       tags: [Playlists]
