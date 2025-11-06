@@ -177,6 +177,15 @@ class FixtureGenerator:
         content = response.get('content', {})
         json_content = content.get('application/json', {})
 
+        # Handle 204 No Content responses
+        if status_code == '204':
+            return {
+                "status": "success",
+                "message": response.get('description', 'Operation completed successfully'),
+                "timestamp": 1704067200.0,  # 2024-01-01 00:00:00 UTC
+                "data": None
+            }
+
         if not json_content:
             return None
 
