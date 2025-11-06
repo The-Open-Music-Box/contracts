@@ -33,7 +33,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install datamodel-code-generator
+          pip3 install datamodel-code-generator
 
       - name: Generate all contracts
         run: |
