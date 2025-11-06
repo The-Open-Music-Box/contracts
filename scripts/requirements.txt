@@ -1,0 +1,2 @@
+# Requirements for contract generation and testing scripts
+PyYAML>=6.0.1,<7.0.0
