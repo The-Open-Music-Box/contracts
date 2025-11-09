@@ -19,7 +19,13 @@ if ! command -v datamodel-codegen &> /dev/null; then
 fi
 
 # Generate Python Pydantic models
-datamodel-codegen \
+# Use ~/.local/bin if datamodel-codegen isn't in PATH
+DATAMODEL_CODEGEN="datamodel-codegen"
+if ! command -v datamodel-codegen &> /dev/null && [ -x "$HOME/.local/bin/datamodel-codegen" ]; then
+    DATAMODEL_CODEGEN="$HOME/.local/bin/datamodel-codegen"
+fi
+
+$DATAMODEL_CODEGEN \
     --input "$SCHEMA_FILE" \
     --output "$OUTPUT_DIR/models.py" \
     --input-file-type openapi \
