@@ -15,7 +15,7 @@ mkdir -p "$OUTPUT_DIR"
 # Check if datamodel-code-generator is installed
 if ! command -v datamodel-codegen &> /dev/null; then
     echo "Installing datamodel-code-generator..."
-    pip install datamodel-code-generator
+    pip3 install --break-system-packages datamodel-code-generator
 fi
 
 # Generate Python Pydantic models
