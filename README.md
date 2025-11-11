@@ -26,14 +26,14 @@ This contracts repository ensures **consistency** and **type safety** across all
 tomb-contracts/
 ├── schemas/                      # Source of truth (edit these)
 │   ├── openapi.yaml             # REST API contracts
-│   └── socketio-events.json     # Socket.IO event contracts
+│   └── socketio_contracts.json  # Socket.IO event contracts
 ├── generated/                    # Auto-generated (gitignored)
 │   ├── dart/                    # Flutter/Dart client
 │   ├── cpp/                     # C++ client
 │   ├── typescript/              # TypeScript types
 │   └── python/                  # Python models
 ├── releases/                     # Versioned releases (committed)
-│   └── v3.0.0/
+│   └── 3.3.1-54739a9/
 │       ├── dart/
 │       ├── cpp/
 │       ├── typescript/
@@ -101,14 +101,14 @@ Add to `pubspec.yaml`:
 ```yaml
 dependencies:
   tomb_contracts:
-    path: ./contracts/releases/v3.2.0/dart/
+    path: ./contracts/releases/3.3.1-54739a9/dart/
 ```
 
 **Option B: Direct Copy (Production)**
 
 ```bash
 # Copy generated Dart package to your project
-cp -r contracts/releases/v3.2.0/dart/ lib/api/tomb_contracts/
+cp -r contracts/releases/3.3.1-54739a9/dart/ lib/api/tomb_contracts/
 ```
 
 **Usage in Dart:**
@@ -139,7 +139,7 @@ git submodule add https://github.com/theopenmusicbox/tomb-contracts.git contract
 
 Add to `CMakeLists.txt`:
 ```cmake
-add_subdirectory(contracts/releases/v3.2.0/cpp)
+add_subdirectory(contracts/releases/3.3.1-54739a9/cpp)
 target_link_libraries(your_app TombContracts)
 ```
 
@@ -174,7 +174,7 @@ git submodule add https://github.com/theopenmusicbox/tomb-contracts.git contract
 
 **Usage in TypeScript:**
 ```typescript
-import type { PlayerState, Playlist, Track } from '../contracts/releases/v3.2.0/typescript';
+import type { PlayerState, Playlist, Track } from '../contracts/releases/3.3.1-54739a9/typescript';
 
 // Full type safety for API responses
 async function getPlayer(): Promise<PlayerState> {
@@ -210,7 +210,7 @@ state = PlayerState(
    vim schemas/openapi.yaml
 
    # Edit Socket.IO contracts
-   vim schemas/socketio-events.json
+   vim schemas/socketio_contracts.json
    ```
 
 2. **Test generation locally:**
@@ -227,7 +227,7 @@ state = PlayerState(
 
 4. **GitHub Actions automatically:**
    - Generates code for all languages
-   - Creates versioned release in `releases/v3.2.0-{commit-sha}/`
+   - Creates versioned release in `releases/3.3.1-{commit-sha}/`
    - Tags the commit
    - Pushes changes back to repo
 
@@ -240,14 +240,14 @@ We use **semantic versioning** (semver) with automatic version detection:
 - **Release Directories**: Named as `{version}-{commit-hash}` (e.g., `releases/3.2.0-799bea2/`)
 
 **Current Versions:**
-- OpenAPI: `v3.3.0`
+- OpenAPI: `v3.3.1`
 - Socket.IO: `v3.1.0`
 
 **When to bump versions:**
 
 - **Major (v4.0.0)**: Breaking API changes (rename fields, remove endpoints)
-- **Minor (v3.3.0)**: Add new endpoints or fields (backward compatible)
-- **Patch (v3.2.1)**: Fix documentation or generation scripts
+- **Minor (v3.4.0)**: Add new endpoints or fields (backward compatible)
+- **Patch (v3.3.2)**: Fix documentation or generation scripts
 
 **How versions are managed:**
 
@@ -268,10 +268,10 @@ Tags like `v3.2.0` point to commits containing generated client libraries (not s
    ```bash
    cd your-app/contracts
    git fetch origin
-   git checkout v3.2.0
+   git checkout v3.3.1
    cd ..
    git add contracts
-   git commit -m "Update contracts to v3.2.0"
+   git commit -m "Update contracts to v3.3.1"
    ```
 
 2. Regenerate if needed:
@@ -290,7 +290,7 @@ Full OpenAPI documentation is available at:
 
 ### Socket.IO Events
 
-Socket.IO contract definitions are in `schemas/socketio-events.json`.
+Socket.IO contract definitions are in `schemas/socketio_contracts.json`.
 
 **Key event categories:**
 - **Connection**: `connect`, `disconnect`, `connection_status`
@@ -309,7 +309,7 @@ npx @openapitools/openapi-generator-cli validate -i schemas/openapi.yaml
 
 # Validate JSON Schema
 npm install -g ajv-cli
-ajv validate -s schemas/socketio-events.json
+ajv validate -s schemas/socketio_contracts.json
 ```
 
 ## 🔧 Troubleshooting
@@ -354,7 +354,7 @@ vcpkg install cpprestsdk
 ```yaml
 dependencies:
   tomb_contracts:
-    path: ./contracts/releases/v3.2.0/dart/  # Check this path
+    path: ./contracts/releases/3.3.1-54739a9/dart/  # Check this path
 ```
 
 ## 🤝 Contributing

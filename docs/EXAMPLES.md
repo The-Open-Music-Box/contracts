@@ -10,7 +10,7 @@ Practical examples for using TheOpenMusicBox contracts in each supported languag
 # pubspec.yaml
 dependencies:
   tomb_contracts:
-    path: ../tomb-contracts/releases/v3.2.0/dart/
+    path: ../tomb-contracts/releases/3.3.1-54739a9/dart/
   dio: ^5.0.0
 ```
 
@@ -156,7 +156,7 @@ project(TombClient)
 set(CMAKE_CXX_STANDARD 17)
 
 # Add contracts library
-add_subdirectory(../tomb-contracts/releases/v3.2.0/cpp)
+add_subdirectory(../tomb-contracts/releases/3.3.1-54739a9/cpp)
 
 add_executable(tomb_client main.cpp)
 target_link_libraries(tomb_client TombContracts)
@@ -307,7 +307,7 @@ import type {
   Playlist,
   Track,
   UnifiedResponse
-} from '../tomb-contracts/releases/v3.2.0/typescript';
+} from '../tomb-contracts/releases/3.3.1-54739a9/typescript';
 ```
 
 ### API Client
@@ -426,7 +426,7 @@ async function main() {
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import type { PlayerState } from '../contracts/releases/v3.2.0/typescript';
+import type { PlayerState } from '../contracts/releases/3.3.1-54739a9/typescript';
 import { TombApiClient } from './api-client';
 
 const api = new TombApiClient();

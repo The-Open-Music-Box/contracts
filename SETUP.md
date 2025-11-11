@@ -76,7 +76,7 @@ Edit `pubspec.yaml`:
 ```yaml
 dependencies:
   tomb_contracts:
-    path: ./contracts/releases/v3.2.0/dart/
+    path: ./contracts/releases/3.3.1-54739a9/dart/
 ```
 
 ### Option B: Direct Path Reference
@@ -110,7 +110,7 @@ git submodule add https://github.com/theopenmusicbox/tomb-contracts.git contract
 
 Edit `CMakeLists.txt`:
 ```cmake
-add_subdirectory(contracts/releases/v3.2.0/cpp)
+add_subdirectory(contracts/releases/3.3.1-54739a9/cpp)
 target_link_libraries(your_app TombContracts)
 ```
 
@@ -154,7 +154,7 @@ git submodule add https://github.com/theopenmusicbox/tomb-contracts.git contract
 ### Usage
 
 ```typescript
-import type { PlayerState, Playlist } from '../contracts/releases/v3.2.0/typescript';
+import type { PlayerState, Playlist } from '../contracts/releases/3.3.1-54739a9/typescript';
 
 async function getPlayer(): Promise<PlayerState> {
   const response = await fetch('/api/player/status');
@@ -207,15 +207,15 @@ dependencies:
   tomb_contracts:
     git:
       url: https://github.com/theopenmusicbox/tomb-contracts.git
-      ref: v3.2.0
-      path: releases/3.2.0-799bea2/dart/
+      ref: v3.3.1
+      path: releases/3.3.1-54739a9/dart/
 ```
 
 **Flutter (Option 2: Submodule):**
 ```bash
 cd your-flutter-app/contracts
 git fetch origin
-git checkout v3.2.0
+git checkout v3.3.1
 cd ../..
 # Update pubspec.yaml path if needed
 flutter pub get
@@ -227,7 +227,7 @@ include(FetchContent)
 FetchContent_Declare(
   tomb_contracts
   GIT_REPOSITORY https://github.com/theopenmusicbox/tomb-contracts.git
-  GIT_TAG v3.2.0
+  GIT_TAG v3.3.1
 )
 FetchContent_MakeAvailable(tomb_contracts)
 ```
@@ -265,7 +265,7 @@ FetchContent_MakeAvailable(tomb_contracts)
    ```bash
    cd flutter-app/contracts
    git fetch origin
-   git checkout v3.2.0  # or desired version tag
+   git checkout v3.3.1  # or desired version tag
    cd ../..
    flutter pub get
    ```
