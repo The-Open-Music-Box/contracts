@@ -25,6 +25,9 @@ openapi-generator-cli generate \
     -o "$OUTPUT_DIR" \
     --additional-properties=pubName=tomb_contracts,pubVersion=3.0.0,pubDescription=TheOpenMusicBox_API_Client_for_Dart_Flutter,pubAuthor=TheOpenMusicBox,pubHomepage=https://github.com/theopenmusicbox/tomb-contracts,dateLibrary=core,nullSafe=true,useEnumExtension=true
 
+# Post-process to fix missing UnifiedResponseData imports
+python3 "$SCRIPT_DIR/fix-dart-imports.py" "$OUTPUT_DIR"
+
 echo "✅ Dart client generated successfully at: $OUTPUT_DIR"
 echo ""
 echo "📦 To use in your Flutter project:"
