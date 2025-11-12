@@ -6,7 +6,7 @@ info:
 
     All API responses follow the UnifiedResponseService format with standardized envelopes.
     This specification is the source of truth for all client implementations (Web, Flutter, C++).
-  version: 3.3.1
+  version: 3.3.2
   contact:
     name: TheOpenMusicBox
     url: https://github.com/theopenmusicbox/tomb-rpi
