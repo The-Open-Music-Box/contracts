@@ -65,7 +65,7 @@ jobs:
           Schema Source: schemas/openapi.yaml
           EOF
 
-      - name: Commit and push to deploy branch
+      - name: Commit and push to release branch
         run: |
           VERSION="${{ steps.version.outputs.version }}"
 
@@ -77,9 +77,9 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-          # Fetch and checkout deploy branch (orphan branch with only releases)
-          git fetch origin deploy
-          git checkout deploy
+          # Fetch and checkout release branch (orphan branch with only releases)
+          git fetch origin release
+          git checkout release
 
           # Copy the new release
           cp -r /tmp/generated-release/$VERSION releases/
@@ -91,9 +91,18 @@ jobs:
           # Create version tag
           git tag -a "v$VERSION" -m "Release v$VERSION"
 
-      - name: Push changes to deploy
+      - name: Push changes to release
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: deploy
+          branch: release
           tags: true
+
+      - name: Export metrics to Pushgateway
+        if: always()
+        run: |
+          GENERATION_SUCCESS=${{ job.status == 'success' && 1 || 0 }}
+          cat <<EOF | curl --data-binary @- http://host.docker.internal:9091/metrics/job/ci/instance/contracts
+          ci_generation_success{repo="contracts",branch="${{ github.ref_name }}"} ${GENERATION_SUCCESS}
+          ci_build_timestamp{repo="contracts",branch="${{ github.ref_name }}"} $(date +%s)
+          EOF
