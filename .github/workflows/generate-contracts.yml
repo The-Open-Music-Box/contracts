@@ -67,21 +67,24 @@ jobs:
 
       - name: Commit and push to deploy branch
         run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Save generated files to temp location
+          mkdir -p /tmp/generated-release
+          cp -r releases/$VERSION /tmp/generated-release/
+
+          # Configure git
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-          VERSION="${{ steps.version.outputs.version }}"
-
-          # Fetch deploy branch
-          git fetch origin deploy:deploy || git checkout -b deploy
-
-          # Checkout deploy branch
+          # Fetch and checkout deploy branch (orphan branch with only releases)
+          git fetch origin deploy
           git checkout deploy
 
-          # Merge changes from develop (the generated releases folder)
-          git merge --no-edit ${{ github.sha }} || true
+          # Copy the new release
+          cp -r /tmp/generated-release/$VERSION releases/
 
-          # Stage the releases
+          # Stage and commit
           git add releases/$VERSION/
           git commit -m "Generate contracts v$VERSION [skip ci]" || echo "No changes to commit"
 
