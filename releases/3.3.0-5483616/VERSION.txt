@@ -1,4 +1,0 @@
-Version: 3.3.0-5483616
-Generated: 2025-11-03 08:58:04 UTC
-Commit: 548361648d20f9ea203de97e1bfa8ad7da49ba0b
-Schema Source: schemas/openapi.yaml

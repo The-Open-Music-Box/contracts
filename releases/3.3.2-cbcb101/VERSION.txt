@@ -1,4 +1,0 @@
-Version: 3.3.2-cbcb101
-Generated: 2025-11-12 13:56:02 UTC
-Commit: cbcb1019a1203307c70974ce1863b26743396402
-Schema Source: schemas/openapi.yaml

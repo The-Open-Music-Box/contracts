@@ -1,5 +1,6 @@
-# Generated code (auto-generated, not committed)
+# Generated code (auto-generated, lives on deploy branch only)
 generated/
+releases/
 
 # Node modules
 node_modules/
