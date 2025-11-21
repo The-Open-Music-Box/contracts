@@ -3,7 +3,7 @@ name: Generate Contracts
 on:
   push:
     branches:
-      - main
+      - develop
     paths:
       - 'schemas/**'
   workflow_dispatch:
@@ -65,24 +65,32 @@ jobs:
           Schema Source: schemas/openapi.yaml
           EOF
 
-      - name: Commit generated code
+      - name: Commit and push to deploy branch
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
           VERSION="${{ steps.version.outputs.version }}"
 
+          # Fetch deploy branch
+          git fetch origin deploy:deploy || git checkout -b deploy
+
+          # Checkout deploy branch
+          git checkout deploy
+
+          # Merge changes from develop (the generated releases folder)
+          git merge --no-edit ${{ github.sha }} || true
+
+          # Stage the releases
           git add releases/$VERSION/
           git commit -m "Generate contracts v$VERSION [skip ci]" || echo "No changes to commit"
 
-          # Create tag if on main branch
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            git tag -a "v$VERSION" -m "Release v$VERSION"
-          fi
+          # Create version tag
+          git tag -a "v$VERSION" -m "Release v$VERSION"
 
-      - name: Push changes
+      - name: Push changes to deploy
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+          branch: deploy
           tags: true
